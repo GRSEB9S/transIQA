@@ -10,6 +10,7 @@ function [out_im,status ] = open_bitfield_bmp( filename )
 % Get information about the image
 info = imfinfo(filename);
 
+
 % if we have a bitfield compressed R-G-B bitmap image
 if ( strcmp(info.Format , 'bmp') && ...
      strcmp(info.CompressionType , 'bitfields') &&  ...
@@ -73,7 +74,7 @@ else
     
     % general imread for all other cases
     out_im = imread(filename);
-    %imshow(out_im);
+    % imshow(out_im);
     
 end
 
