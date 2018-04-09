@@ -29,7 +29,7 @@ class Net(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=0),
             nn.MaxPool2d(kernel_size=2, stride=2),
-            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=0),
+            nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=0)
         )
 
         self.classifiers = nn.Sequential(
@@ -53,7 +53,11 @@ class Net(nn.Module):
         x_max = F.max_pool2d(x, kernel_size=4, stride=4)
         x_min = x_min.view(x_min.size(0), -1)
         x_max = x_max.view(x_max.size(0), -1)
-        x = torch.cat((x_min, x_max), 0)
+        x = torch.cat((x_min, x_max), 1)
+        #debug
+        debug = False
+        if debug:
+            print(x)
 
         x = self.classifiers(x)
 

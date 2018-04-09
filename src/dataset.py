@@ -3,6 +3,7 @@ from skimage import io, transform
 from torchvision import transforms
 import numpy as np
 import torch
+import tools
 
 class Rescale(object):
     """Rescale the image in a sample to a given size.
@@ -80,7 +81,6 @@ class ToTensor(object):
         # swap color axis because
         # numpy image: H x W x C
         # torch image: C X H X W
-        print(image.shape)
         image = image.transpose((2, 0, 1))
         return {'image': torch.from_numpy(image),
                 'score': torch.from_numpy(score)}
@@ -98,12 +98,33 @@ class FaceScoreDataset(Dataset):
         self.scores = [line.rstrip('\n').split()[1] for line in open(image_list)]
         self.transform = transform
 
+        #debug: show image shape
+        debug = False
+        if debug:
+            num = 0
+            path = []
+            for i in self.images:
+                fault_path = tools.show_image_depth(i)
+                if fault_path != '':
+                    path.append(fault_path)
+                    num += 1
+            print(num)
+            print(path)
+            exit(0)
+
     def __len__(self):
         return len(self.images)
 
     def __getitem__(self, idx):
         image = io.imread(self.images[idx])
-        score = np.array((float(self.scores[idx]))).reshape([1])#IMPORTANT
+        image = np.array(image, dtype=np.float32)
+        # debug
+        debug = False
+        if debug:
+            print(image.dtype)
+            print(np.array(image, dtype=np.float32).dtype)
+            exit(0)
+        score = np.array((float(self.scores[idx])), dtype=np.float32).reshape([1])#IMPORTANT
         sample = {'image': image, 'score': score}
 
         if self.transform:

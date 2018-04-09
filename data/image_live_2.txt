@@ -1168,7 +1168,6 @@
 ../dataset/transIQA/pristine_images/image01971.jpg 25.36712
 ../dataset/transIQA/pristine_images/image02841.jpg 29.423769
 ../dataset/transIQA/pristine_images/aflw__face_61983.jpg 24.659788
-../dataset/transIQA/pristine_images/outdoor_178.png 11.929297
 ../dataset/transIQA/pristine_images/aflw__face_40719.jpg 24.037062
 ../dataset/transIQA/pristine_images/outdoor_223.png 16.575567
 ../dataset/transIQA/pristine_images/aflw__face_39856.jpg 26.032154
@@ -1488,7 +1487,6 @@
 ../dataset/transIQA/pristine_images/aflw__face_61758.jpg 25.057497
 ../dataset/transIQA/pristine_images/image00059.jpg 24.640139
 ../dataset/transIQA/pristine_images/image00597.jpg 25.500816
-../dataset/transIQA/pristine_images/outdoor_031.png 17.337166
 ../dataset/transIQA/pristine_images/image01641.jpg 24.813341
 ../dataset/transIQA/pristine_images/aflw__face_62285.jpg 29.173552
 ../dataset/transIQA/pristine_images/aflw__face_47685.jpg 29.98835
@@ -1867,7 +1865,6 @@
 ../dataset/transIQA/pristine_images/aflw__face_64249.jpg 29.624023
 ../dataset/transIQA/pristine_images/image03265.jpg 16.415668
 ../dataset/transIQA/pristine_images/image04356.jpg 27.857006
-../dataset/transIQA/pristine_images/outdoor_177.png 14.759237
 ../dataset/transIQA/pristine_images/aflw__face_63015.jpg 29.129608
 ../dataset/transIQA/pristine_images/aflw__face_41587.jpg 29.872398
 ../dataset/transIQA/pristine_images/aflw__face_42230.jpg 29.274614
@@ -1884,7 +1881,6 @@
 ../dataset/transIQA/pristine_images/outdoor_279.png 24.198704
 ../dataset/transIQA/pristine_images/image03860.jpg 29.640322
 ../dataset/transIQA/pristine_images/image04301.jpg 29.782518
-../dataset/transIQA/pristine_images/outdoor_175.png 26.889513
 ../dataset/transIQA/pristine_images/image00289.jpg 27.226467
 ../dataset/transIQA/pristine_images/aflw__face_43604.jpg 25.792723
 ../dataset/transIQA/pristine_images/aflw__face_44400.jpg 29.424755
