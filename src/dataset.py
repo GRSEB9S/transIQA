@@ -4,6 +4,7 @@ from torchvision import transforms
 import numpy as np
 import torch
 import tools
+import glymur
 
 class Rescale(object):
     """Rescale the image in a sample to a given size.
@@ -116,14 +117,26 @@ class FaceScoreDataset(Dataset):
         return len(self.images)
 
     def __getitem__(self, idx):
-        image = io.imread(self.images[idx])
+        if self.images[idx][-4:] == '.jp2':
+            image = glymur.Jp2k(self.images[idx])[:]
+
+            #debug
+            debug=0
+            if debug:
+                tools.show_image(image)
+
+        else:
+            image = io.imread(self.images[idx])
         image = np.array(image, dtype=np.float32)
+
         # debug
-        debug = False
+        debug = 0
         if debug:
             print(image.dtype)
             print(np.array(image, dtype=np.float32).dtype)
+            print(image.shape)
             exit(0)
+
         score = np.array((float(self.scores[idx])), dtype=np.float32).reshape([1])#IMPORTANT
         sample = {'image': image, 'score': score}
 
