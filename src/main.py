@@ -14,13 +14,14 @@ parser.add_argument('--batch_size', type=int, default=64,
                     help='input batch size for training')
 parser.add_argument('--epochs', type=int, default=10)
 
-cuda = torch.cuda.is_available()
+cuda = 0 and torch.cuda.is_available()
 log_interval = 100
 epochs = 100
 lr = 0.0001
 momentum = 0.5
 txt_input = './data/image_score_generated.txt'
 batch_size = 64
+num_workers = 4
 
 model = model.Net()
 if cuda:
@@ -34,6 +35,11 @@ face_dataset = dataset.FaceScoreDataset(image_list=txt_input,
                                             dataset.RandomCrop(32),
                                             dataset.ToTensor()
                                         ]))
+#debug for Dataset
+debug=1
+if debug:
+    print('FaceScoreDataset Initial: OK!')
+    exit(0)
 
 #for i in range(len(face_dataset)):
 #    sample = face_dataset[i]
@@ -42,7 +48,7 @@ face_dataset = dataset.FaceScoreDataset(image_list=txt_input,
 #    tools.show_image(sample['image'], sample['score'])
 
 dataloader = DataLoader(face_dataset, batch_size=batch_size,
-                        shuffle=True, num_workers=1)# glymur not support multi-processing
+                        shuffle=True, num_workers=num_workers)# glymur not support multi-processing
 
 # debug code
 debug = False
