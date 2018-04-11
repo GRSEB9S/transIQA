@@ -116,6 +116,3 @@ def prepare_faces(scale = 1.2):
     with open('../dataset/transIQA' + '/' + output_file, 'w') as f:
         for i in range(len(faces)):
             f.write(faces[i] + ' ' +str(face_scores[i]) + '\n')
-
-
-prepare_faces()

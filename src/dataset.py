@@ -156,7 +156,7 @@ class FaceScoreDataset_015(Dataset):
 
         return sample
 
-class FaceScoreDataset(Dataset):
+class FaceScoreDataset_0152(Dataset):
     """Face Score dataset"""
 
     def __init__(self, image_list, transform=None, use_dlib_cnn=True, scale = 1.2):
@@ -164,69 +164,12 @@ class FaceScoreDataset(Dataset):
         initiate imagelist and score
         :param image_list: .txt file with image path and score
         """
-        # CNNs has to be used.
-        # not only frontal face is needed.
-        #
-
-        dlib_model_path = './model/mmod_human_face_detector.dat'
-
         self.images = [line.rstrip('\n').split()[0] for line in open(image_list)]
         self.scores = [line.rstrip('\n').split()[1] for line in open(image_list)]
         self.transform = transform
-        self.face_detector = dlib.cnn_face_detection_model_v1(dlib_model_path)
-        self.faces = []
-        self.face_scores = []
 
-
-        print('Datasets reading and Face detecting')
         # prepare faces
         # detect faces and save as images file
-
-        # read images and detect faces
-        pristine_images = []
-        num_pristine = int(len(self.images) / 21)
-        for i in range(num_pristine):
-            pristine_images.append(self.images[i * 21])
-
-        # detect faces for one pristine
-        for i in range(len(pristine_images)):
-            print('Reading images: %s'%pristine_images[i])
-            image = cv2.imread(pristine_images[i])
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            dets = self.detect_faces(image)
-
-            # get face locations
-            face_locations = []
-            for _, d in enumerate(dets):
-                if d.confidence > 0.5:
-                    left, right, top, bottom = d.rect.left(), d.rect.right(), d.rect.top(), d.rect.bottom()
-                    height = bottom - top
-                    width = right - left
-                    central = (int((top+bottom)*0.5), int((left+right)*0.5))
-
-                    #scale image
-                    top = max(int(central[0] - height * scale * 0.5), 0)
-                    bottom = min(int(central[0] + height * scale * 0.5), image.shape[0])
-                    left = max(int(central[1] - width * scale * 0.5), 0)
-                    right = min(int(central[1] + width * scale * 0.5), image.shape[1])
-
-                    face_locations.append([top, bottom, left, right])
-
-            # crop exist datasets
-            if len(face_locations) > 0:
-                for j in range(4*5+1):
-                    image = cv2.imread(self.images[i*21 + j])
-                    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                    score = self.scores[i*21 + j]
-                    for location in face_locations:
-                        #debug
-                        debug=0
-                        if debug:
-                            plt.imshow(image[location[0]:location[1], location[2]:location[3], :])
-                            plt.title(str(score))
-                            plt.show()
-                        self.faces.append(image[location[0]:location[1], location[2]:location[3], :])
-                        self.face_scores.append(score)
 
         #debug: show image shape
         debug = False
@@ -261,9 +204,89 @@ class FaceScoreDataset(Dataset):
         image = np.array(image, dtype=np.float32)
         """
 
-        image = cv2.imread(self.images[idx])
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = np.load(self.images[idx])
         image = np.array(image, dtype=np.float32)
+
+        # debug
+        debug = 1
+        if debug:
+            print(image.dtype)
+            print(np.array(image, dtype=np.float32).dtype)
+            print(image.shape)
+            tools.show_image(np.array(image, dtype=np.int)) # interfaces is not supported for multi-processing
+            #exit(0)
+
+        score = np.array((float(self.scores[idx])), dtype=np.float32).reshape([1])#IMPORTANT
+        sample = {'image': image, 'score': score}
+
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
+
+class FaceScoreDataset(Dataset):
+    """Face Score dataset"""
+
+    def __init__(self, image_list, transform=None, use_dlib_cnn=True, scale = 1.2, num_faces=10000, train=True):
+        """
+        initiate imagelist and score
+        :param image_list: .txt file with image path and score
+        """
+        faces = [line.rstrip('\n').split()[0] for line in open(image_list)]
+        scores = [line.rstrip('\n').split()[1] for line in open(image_list)]
+        self.transform = transform
+        self.images = []
+        self.scores = []
+        self.train = train
+
+        #debug: show image shape
+        debug = False
+        if debug:
+            num = 0
+            path = []
+            for i in self.images:
+                fault_path = tools.show_image_depth(i)
+                if fault_path != '':
+                    path.append(fault_path)
+                    num += 1
+            print(num)
+            print(path)
+            exit(0)
+
+        # reading datasets
+        assert num_faces < len(faces)
+        assert len(faces) > 50000
+        if self.train:
+            print('Loading Training set')
+            for i in np.random.choice(50000, num_faces):
+                #debug
+                debug=0
+                if debug:
+                    print(i)
+                self.images.append(np.array(np.load(faces[i]), dtype=np.float32))
+                self.scores.append(scores[i])
+                #if len(self.images) % 1000 == 0:
+                #    print('%d in %d'%(len(self.images), len(faces)))
+        else:
+            print('Loading Testing set')
+            for i in range(50000, len(faces)):
+                self.images.append(np.array(np.load(faces[i]), dtype=np.float32))
+                if type(self.scores) == list:
+                    self.scores.append(float(scores[i]))
+                else:
+                    np.concatenate([self.scores, np.array(float(scores[i])).reshape(1)])
+                #if len(self.images) % 1000 == 0:
+                #    print('%d in %d'%(i, len(faces)))
+                self.scores = np.array(self.scores, dtype=np.float32)
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+
+        assert self.train == True, 'getitem fuction only for training.'
+
+        image = self.images[idx]
 
         # debug
         debug = 0
@@ -281,8 +304,3 @@ class FaceScoreDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
-
-    def detect_faces(self, image):
-
-        return self.face_detector(image, 1)
-
