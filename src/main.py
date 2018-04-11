@@ -19,7 +19,7 @@ log_interval = 100
 epochs = 100
 lr = 0.0001
 momentum = 0.5
-txt_input = './data/image_score_generated.txt'
+txt_input = './data/image_score_generated_dlib.txt'
 batch_size = 64
 num_workers = 4
 

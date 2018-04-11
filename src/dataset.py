@@ -179,6 +179,8 @@ class FaceScoreDataset(Dataset):
 
 
         print('Datasets reading and Face detecting')
+        # prepare faces
+        # detect faces and save as images file
 
         # read images and detect faces
         pristine_images = []
@@ -188,9 +190,10 @@ class FaceScoreDataset(Dataset):
 
         # detect faces for one pristine
         for i in range(len(pristine_images)):
+            print('Reading images: %s'%pristine_images[i])
             image = cv2.imread(pristine_images[i])
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            dets = self.face_detector(image, 1)
+            dets = self.detect_faces(image)
 
             # get face locations
             face_locations = []
@@ -278,3 +281,8 @@ class FaceScoreDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
+
+    def detect_faces(self, image):
+
+        return self.face_detector(image, 1)
+

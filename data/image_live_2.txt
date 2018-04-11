@@ -2154,3 +2154,4 @@
 ../dataset/transIQA/pristine_images/aflw__face_42452.jpg 24.991735
 ../dataset/transIQA/pristine_images/image03654.jpg 24.09825
 ../dataset/transIQA/pristine_images/aflw__face_49930.jpg 24.275295
+

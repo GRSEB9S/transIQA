@@ -1,5 +1,9 @@
 import matplotlib.pyplot as plt
 from skimage import io
+import dlib
+import cv2
+import numpy as np
+import os.path as osp
 plt.figure()
 
 
@@ -26,3 +30,92 @@ def show_image_depth(image_path):
         print(path, image.shape)
 
     return path
+
+
+def prepare_faces(scale = 1.2):
+
+    image_list = './data/image_score_generated_dlib.txt'
+    output_root = '../dataset/transIQA/faces'
+    output_file = 'face_score_generated_dlib.txt'
+
+    dlib_model_path = './model/mmod_human_face_detector.dat'
+
+    images = [line.rstrip('\n').split()[0] for line in open(image_list)]
+    scores = [line.rstrip('\n').split()[1] for line in open(image_list)]
+    face_detector = dlib.cnn_face_detection_model_v1(dlib_model_path)
+    faces = []
+    face_scores = []
+
+    print('Datasets reading and Face detecting')
+    # prepare faces
+    # detect faces and save as images file
+
+    # read images and detect faces
+    pristine_images = []
+    num_pristine = int(len(images) / 21)
+    for i in range(num_pristine):
+        pristine_images.append(images[i * 21])
+
+    # detect faces for one pristine
+    for i in range(len(pristine_images)):
+        print('Reading images: %s'%pristine_images[i])
+        image_name = osp.splitext(osp.split(pristine_images[i])[1])[0]
+
+        image = cv2.imread(pristine_images[i])
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        dets = face_detector(image, 1)
+
+        # get face locations
+        face_locations = []
+        for _, d in enumerate(dets):
+            if d.confidence > 0.5:
+                left, right, top, bottom = d.rect.left(), d.rect.right(), d.rect.top(), d.rect.bottom()
+                height = bottom - top
+                width = right - left
+                central = (int((top+bottom)*0.5), int((left+right)*0.5))
+
+                #scale image
+                top = max(int(central[0] - height * scale * 0.5), 0)
+                bottom = min(int(central[0] + height * scale * 0.5), image.shape[0])
+                left = max(int(central[1] - width * scale * 0.5), 0)
+                right = min(int(central[1] + width * scale * 0.5), image.shape[1])
+
+                face_locations.append([top, bottom, left, right])
+
+        # crop exist datasets
+        if len(face_locations) > 0:
+            for j in range(4*5+1):
+                image = cv2.imread(images[i*21 + j])
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                score = scores[i*21 + j]
+                face_num = 0
+                for location in face_locations:
+                    #suffix
+
+                    face_num += 1
+                    suffix = osp.split(osp.split(images[i*21 + j])[0])[1] + '_' + str(face_num)
+
+                    image_path = output_root + '/' + image_name + '_' + suffix + '.npy'
+                    #print('saving numpy image: %s'%image_path)
+                    np.save(image_path, image[location[0]:location[1], location[2]:location[3], :])
+
+                    faces.append(image_path)
+                    face_scores.append(score)
+
+                    #debug
+                    debug=0
+                    if debug:
+                        plt.imshow(np.load(image_path))
+                        plt.title(str(score))
+                        plt.show()
+
+        print('%d in %d'%(i, len(pristine_images)))
+
+
+
+    with open('../dataset/transIQA' + '/' + output_file, 'w') as f:
+        for i in range(len(faces)):
+            f.write(faces[i] + ' ' +str(face_scores[i]) + '\n')
+
+
+prepare_faces()
