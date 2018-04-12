@@ -6,8 +6,6 @@ import torch
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.autograd import Variable
-from torch.utils.data import DataLoader
-from torchvision import transforms
 import gc
 import numpy as np
 
@@ -17,14 +15,13 @@ parser.add_argument('--batch_size', type=int, default=64,
 parser.add_argument('--epochs', type=int, default=10)
 
 cuda = 1 and torch.cuda.is_available()
-log_interval = 200
-epochs = 75000000 # for 5W images, each images 30 patches, each patch 10 times
-per_epoch = 1500000 # 50 times for one image
+log_interval = 10
+epochs = 5 # for 5W images, each images 30 patches, each patch 10 times
 per_epoch = 2
 lr = 0.00001
 momentum = 0.5
 txt_input = './data/face_score_generated_dlib.txt'
-batch_size = 32
+batch_size = 64
 num_workers = 4
 num_faces = 10000 #7G ROM for 10000 28*28*3 numpy array
 
@@ -65,37 +62,61 @@ if debug:
 
 def train(epoch=1):
     model.train()
-    for batch_idx, sample_batched in enumerate(dataloader):
-        image = sample_batched['image']
-        score = sample_batched['score']
-        if cuda:
-            image, score = image.cuda(), score.cuda()
-        image, score = Variable(image), Variable(score)
 
-        #debug
-        debug = False
-        if debug:
-            print(type(sample_batched['image']))
-            print(type(image))
-            print(score)
-            exit(0)
+    num_split = int(50000 / num_faces)
+    patch_per_face = 30
+    num_total_patch = 50000 * patch_per_face
+    log_patch = int(num_total_patch / log_interval)
 
-        optimizer.zero_grad()
-        output = model(image)
-        loss = F.l1_loss(output, score)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(image), len(dataloader.dataset),
-                       100. * batch_idx / len(dataloader), loss.data[0]))
+    # for one train, five dataloader
+    for i in range(num_split):
+        face_dataset = tools.get_dataset(image_list = txt_input, num_faces = num_faces)
+
+        # one dataset, get 30 dataloader
+        for j in range(patch_per_face):
+            #print('Training: epoch_{}, split_{}/{}, patch_{}/{}'.format(epoch,
+            #                                                            i+1, num_split,
+            #                                                            j+1, patch_per_face))
+            dataloader = tools.get_dataloader(face_dataset,
+                                              batch_size=batch_size,
+                                              shuffle=True,
+                                              num_workers=num_workers)
+            for batch_idx, sample_batched in enumerate(dataloader):
+                image = sample_batched['image']
+                score = sample_batched['score']
+                if cuda:
+                    image, score = image.cuda(), score.cuda()
+                image, score = Variable(image), Variable(score)
+
+                #debug
+                debug = False
+                if debug:
+                   print(type(sample_batched['image']))
+                   print(type(image))
+                   print(score)
+                   exit(0)
+
+                optimizer.zero_grad()
+                output = model(image)
+                loss = F.l1_loss(output, score)
+                loss.backward()
+                optimizer.step()
+
+                num_patches = i*patch_per_face*num_faces + j*num_faces + batch_idx*batch_size
+                if num_patches % log_patch == 0:
+                    print('Train Epoch: {} Split: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                        epoch, i+1, num_patches, num_total_patch,
+                                100. * num_patches / num_total_patch, loss.data[0]))
+
+        # restore memory for next
+        del face_dataset.images
+        gc.collect()
 
 
 def test():
     #model.test()
 
-    face_dataset = dataset.FaceScoreDataset(image_list=txt_input,
-                                            train = False)
+    face_dataset = tools.get_dataset(train=False, image_list=txt_input)
 
     images = face_dataset.images
     scores = face_dataset.scores
@@ -132,24 +153,17 @@ def test():
     loss = np.mean(np.abs(np.array(outputs - scores)))
     print('Testing Loss:{:.6f}'.format(loss))
 
+    del face_dataset.images
+    gc.collect()
+
 
 
 for epoch in range(1, epochs + 1):
 
-    # reload dataset
+    print('epoch: {}'.format(epoch))
+
     if epoch % per_epoch == 1:
-        if epoch > 1:
-            del face_dataset.images #IMPORTANT: delete list type variables is useful
-            del dataloader
-            gc.collect()
-            test()
-        face_dataset = dataset.FaceScoreDataset(image_list=txt_input,
-                                                transform = transforms.Compose([
-                                                    dataset.RandomCrop(32),
-                                                    dataset.ToTensor()
-                                                ]),
-                                                num_faces = num_faces)
-        dataloader = DataLoader(face_dataset, batch_size=batch_size,
-                                shuffle=True, num_workers=num_workers)
+        print('Testing')
+        test()
 
     train(epoch)

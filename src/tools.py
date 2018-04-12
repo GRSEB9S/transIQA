@@ -3,8 +3,9 @@ from skimage import io
 import dlib
 import cv2
 import numpy as np
-import os.path as osp
-plt.figure()
+from torchvision import transforms
+from torch.utils.data import DataLoader
+import dataset
 
 
 def read_txt(image_path):
@@ -116,3 +117,32 @@ def prepare_faces(scale = 1.2):
     with open('../dataset/transIQA' + '/' + output_file, 'w') as f:
         for i in range(len(faces)):
             f.write(faces[i] + ' ' +str(face_scores[i]) + '\n')
+
+
+def get_dataset(train=True,
+                image_list='',
+                transform=transforms.Compose([
+                    dataset.RandomCrop(32),
+                    dataset.ToTensor()
+                ]),
+                num_faces=10000):
+
+    if train:
+        face_dataset = dataset.FaceScoreDataset(image_list=image_list,
+                                                transform = transform,
+                                                num_faces = num_faces)
+
+    else:
+        face_dataset = dataset.FaceScoreDataset(train=False,
+                                                image_list=image_list)
+
+    return face_dataset
+
+def get_dataloader(face_dataset, batch_size, shuffle=True, num_workers=4):
+
+    return DataLoader(face_dataset, batch_size=batch_size,
+                     shuffle=shuffle, num_workers=num_workers)
+
+def np_load(path):
+    print(path)
+    return np.load(path)
