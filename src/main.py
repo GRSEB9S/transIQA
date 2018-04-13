@@ -23,7 +23,7 @@ momentum = 0.5
 txt_input = './data/face_score_generated_dlib.txt'
 batch_size = 64
 num_workers = 4
-num_faces = 10000 #7G ROM for 10000 28*28*3 numpy array
+num_faces = 1000 #7G ROM for 10000 28*28*3 numpy array
 
 model = model.Net()
 if cuda:
@@ -70,7 +70,7 @@ def train(epoch=1):
 
     # for one train, five dataloader
     for i in range(num_split):
-        face_dataset = tools.get_dataset(image_list = txt_input, num_faces = num_faces)
+        face_dataset = tools.get_dataset_small(image_list = txt_input, num_faces = num_faces)
 
         # one dataset, get 30 dataloader
         for j in range(patch_per_face):
@@ -98,7 +98,7 @@ def train(epoch=1):
 
                 optimizer.zero_grad()
                 output = model(image)
-                loss = F.l1_loss(output, score)
+                loss = F.mse_loss(output, score)
                 loss.backward()
                 optimizer.step()
 
@@ -116,7 +116,7 @@ def train(epoch=1):
 def test():
     #model.test()
 
-    face_dataset = tools.get_dataset(train=False, image_list=txt_input)
+    face_dataset = tools.get_dataset_small(train=False, image_list=txt_input)
 
     images = face_dataset.images
     scores = face_dataset.scores
@@ -150,7 +150,7 @@ def test():
         output = sum(output) / 30
         outputs.append(output)
 
-    loss = np.mean(np.abs(np.array(outputs - scores)))
+    loss = np.mean(np.sqrt(np.array(outputs - scores)))
     print('Testing Loss:{:.6f}'.format(loss))
 
     del face_dataset.images

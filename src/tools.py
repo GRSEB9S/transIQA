@@ -1,6 +1,4 @@
 import matplotlib.pyplot as plt
-from skimage import io
-import dlib
 import cv2
 import numpy as np
 from torchvision import transforms
@@ -34,6 +32,7 @@ def show_image_depth(image_path):
 
 
 def prepare_faces(scale = 1.2):
+    import dlib
 
     image_list = './data/image_score_generated_dlib.txt'
     output_root = '../dataset/transIQA/faces'
@@ -142,6 +141,26 @@ def get_dataloader(face_dataset, batch_size, shuffle=True, num_workers=4):
 
     return DataLoader(face_dataset, batch_size=batch_size,
                      shuffle=shuffle, num_workers=num_workers)
+
+def get_dataset_small(train=True,
+                image_list='',
+                transform=transforms.Compose([
+                    dataset.RandomCrop(32),
+                    dataset.ToTensor()
+                ]),
+                num_faces=10000):
+
+    if train:
+        face_dataset = dataset.FaceScoreDataset_small(image_list=image_list,
+                                                transform = transform,
+                                                num_faces = num_faces)
+
+    else:
+        face_dataset = dataset.FaceScoreDataset_small(train=False,
+                                                image_list=image_list)
+
+    return face_dataset
+
 
 def np_load(path):
     print(path)

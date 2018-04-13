@@ -1,5 +1,4 @@
 from torch.utils.data import Dataset
-from skimage import transform
 import numpy as np
 import torch
 import tools
@@ -15,11 +14,16 @@ class Rescale(object):
             to output_size keeping aspect ratio the same.
     """
 
+
     def __init__(self, output_size):
         assert isinstance(output_size, (int, tuple))
         self.output_size = output_size
 
+
+        from skimage import transform
+
     def __call__(self, sample):
+
         image, landmarks = sample['image'], sample['landmarks']
 
         h, w = image.shape[:2]
@@ -387,6 +391,95 @@ class FaceScoreDataset(Dataset):
         else:
             print('Loading Testing set')
             for i in range(50000, len(faces)):
+                self.images.append(np.array(np.load(faces[i]), dtype=np.float32))
+                if type(self.scores) == list:
+                    self.scores.append(float(scores[i]))
+                else:
+                    np.concatenate([self.scores, np.array(float(scores[i])).reshape(1)])
+                #if len(self.images) % 1000 == 0:
+                #    print('%d in %d'%(i, len(faces)))
+                self.scores = np.array(self.scores, dtype=np.float32)
+
+    def __len__(self):
+        return len(self.images)
+
+    def __getitem__(self, idx):
+
+        assert self.train == True, 'getitem fuction only for training.'
+
+        image = self.images[idx]
+
+        # debug
+        debug = 0
+        if debug:
+            print(image.dtype)
+            print(np.array(image, dtype=np.float32).dtype)
+            print(image.shape)
+            tools.show_image(np.array(image, dtype=np.int)) # interfaces is not supported for multi-processing
+            #exit(0)
+
+        score = np.array((float(self.scores[idx])), dtype=np.float32).reshape([1])#IMPORTANT
+        sample = {'image': image, 'score': score}
+
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
+
+
+def read_dataset(input):
+    #input is the list of the image path
+    img = np.load(input)
+    img = np.array(img, dtype=np.float32)
+    return img
+
+
+class FaceScoreDataset_small(Dataset):
+    """Face Score dataset"""
+
+    def __init__(self, image_list, transform=None, use_dlib_cnn=True, scale = 1.2, num_faces=1000, train=True):
+        """
+        initiate imagelist and score
+        :param image_list: .txt file with image path and score
+        """
+        faces = [line.rstrip('\n').split()[0] for line in open(image_list)]
+        scores = [line.rstrip('\n').split()[1] for line in open(image_list)]
+        self.transform = transform
+        self.images = []
+        self.scores = []
+        self.train = train
+
+        #debug: show image shape
+        debug = False
+        if debug:
+            num = 0
+            path = []
+            for i in self.images:
+                fault_path = tools.show_image_depth(i)
+                if fault_path != '':
+                    path.append(fault_path)
+                    num += 1
+            print(num)
+            print(path)
+            exit(0)
+
+        # reading datasets
+        assert num_faces < len(faces)
+        assert len(faces) > 50000
+        if self.train:
+            print('Loading Training set')
+            for i in np.random.choice(50000, num_faces):
+                #debug
+                debug=0
+                if debug:
+                    print(i)
+                self.images.append(np.array(np.load(faces[i]), dtype=np.float32))
+                self.scores.append(scores[i])
+                #if len(self.images) % 1000 == 0:
+                #    print('%d in %d'%(len(self.images), len(faces)))
+        else:
+            print('Loading Testing set')
+            for i in range(57000, len(faces)):
                 self.images.append(np.array(np.load(faces[i]), dtype=np.float32))
                 if type(self.scores) == list:
                     self.scores.append(float(scores[i]))
