@@ -16,11 +16,11 @@ parser.add_argument('--limited', action="store_true",
 parser.add_argument('--no_cuda', action="store_true",
                     help='cuda disable switch')
 
-parser.add_argument('--log_interval', type=int, default=10,
+parser.add_argument('--log_interval', type=int, default=50,
                     help='percentage of one epoch for loss output')
 parser.add_argument('--per_epoch', type=int, default=2,
                     help='validation output control')
-parser.add_argument('--lr', type=float, default=1e-5,
+parser.add_argument('--lr', type=float, default=1e-6,
                     help='learning rate')
 parser.add_argument('--momentum', type=float, default=0.5,
                     help='momentum')
@@ -31,6 +31,7 @@ parser.add_argument('--batch_size', type=int, default=64,
 parser.add_argument('--num_workers', type=int, default=4,
                     help='workers for getting pictures')
 parser.add_argument('--epochs', type=int, default=10)
+parser.add_argument('--model_epoch', type=int, default=1)
 
 args = parser.parse_args()
 
@@ -44,13 +45,14 @@ txt_input = args.txt_input
 batch_size = args.batch_size
 num_workers = args.num_workers
 limited = args.limited
+model_epoch = args.model_epoch
 
 if limited:
     num_faces = 2000 #7G ROM for 10000 28*28*3 numpy array
 else:
     num_faces = 10000
 
-print('Training face number {}/split'.format(num_faces))
+tools.log_print('{} faces/split'.format(num_faces))
 
 model = model.Net()
 if cuda:
@@ -100,7 +102,7 @@ def train(epoch=1, limited=True):
 
                 num_patches = i*patch_per_face*num_faces + j*num_faces + batch_idx*batch_size
                 if num_patches % log_patch == 0:
-                    print('Train Epoch: {} Split: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    tools.log_print('Epoch_{} Split_{} [{}/{} ({:.0f}%)]\tLoss: {:.2f}'.format(
                         epoch, i+1, num_patches, num_total_patch,
                                 100. * num_patches / num_total_patch, loss.data[0]))
                     tools.evaluate_on_metric(output, score)
@@ -154,19 +156,22 @@ def test(limited=True):
         outputs.append(output)
 
     loss = np.mean((np.array(outputs - scores)) ** 2)
-    print('Testing Loss:{:.6f}'.format(loss))
+    tools.log_print('TESTING LOSS:{:.6f}'.format(loss))
     tools.evaluate_on_metric(outputs, scores)
 
     del face_dataset.images
     gc.collect()
 
 
-for epoch in range(1, epochs + 1):
+for epoch in range(1, epochs+1):
 
-    print('epoch: {}'.format(epoch))
+    tools.log_print('Epoch: {}'.format(epoch))
 
     if epoch % per_epoch == 1:
-        print('Testing')
+        tools.log_print('Testing')
         test(limited=args.limited)
 
     train(epoch, limited=args.limited)
+
+    if epoch % model_epoch == 0:
+        tools.save_model(model=model, model_name='cuda_' + str(cuda), epoch=epoch)

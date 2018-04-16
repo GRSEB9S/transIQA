@@ -15,9 +15,13 @@ Dlib 19.10 (for human face detection)
     * Learning rate
     * and so on
 1. **System Integrity**
+    * Usability
+        * log time
+        * save model
     * Coding redundance 
     * Coding reuse
     * Coding robustness
+    * Coding Readable
     * and so on
 1. **Model**
     * Layer setting

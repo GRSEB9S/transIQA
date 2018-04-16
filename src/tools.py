@@ -1,11 +1,15 @@
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
+import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 import dataset
 from scipy import stats
+import time
+
+start = time.time()
 
 
 def read_txt(image_path):
@@ -182,5 +186,24 @@ def evaluate_on_metric(hypo, score):
     srocc = stats.spearmanr(hypo, score)[0]
     lcc = stats.pearsonr(hypo, score)[0]
 
-    print('srocc:{:.6f}'.format(srocc))
-    print('lcc:{:.6f}'.format(lcc))
+    log_print('SROCC:{:.6f}'.format(srocc))
+    log_print('LCC:{:.6f}'.format(lcc))
+
+
+def log_print(suffix=''):
+
+    second = time.time() - start
+    minute, second = divmod(second, 60)
+    hour, minute = divmod(minute, 60)
+
+    str_time = '[{}:{}:{}]'.format(int(hour), int(minute), int(second))
+
+    print(str_time + ' ' + suffix)
+
+def save_model(model ,model_name='default', epoch=0):
+
+    path = './model/'
+    model_path = path + model_name + '_epoch_' + str(epoch)
+
+    log_print('SAVING MODEL: ' + model_path)
+    torch.save(model, model_path)

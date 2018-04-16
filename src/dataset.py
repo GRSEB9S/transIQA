@@ -343,7 +343,7 @@ class FaceScoreDataset(Dataset):
         assert num_faces < len(faces)
         assert len(faces) > 50000
         if self.train:
-            print('Loading Training set')
+            tools.log_print('Loading Training set')
             for i in np.random.choice(50000, num_faces):
                 #debug
                 debug=0
@@ -353,7 +353,7 @@ class FaceScoreDataset(Dataset):
                     np.array(np.load(faces[i]), dtype=np.float32)))
                 self.scores.append(scores[i])
         else:
-            print('Loading Testing set')
+            tools.log_print('Loading Testing set')
             test_length = 8000
             if self.limited:
                 test_length = 4000
