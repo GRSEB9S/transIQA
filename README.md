@@ -4,6 +4,7 @@ Image quality assessment by transfer learning
 
 #### Dependencies:
 Dlib 19.10 (for human face detection)
+Scipy (for srocc & lcc evaluation)
 
 #### Change log:
 
