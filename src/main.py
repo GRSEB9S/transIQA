@@ -10,10 +10,12 @@ import gc
 import numpy as np
 
 parser = argparse.ArgumentParser(description='TransIQA')
-parser.add_argument('--limited', type=bool, default=True,
+
+parser.add_argument('--limited', action="store_true",
                     help='run with small datasets limited to 8G memory usage')
-parser.add_argument('--cuda', type=bool, default=True,
-                    help='cuda enable switch')
+parser.add_argument('--no_cuda', action="store_true",
+                    help='cuda disable switch')
+
 parser.add_argument('--log_interval', type=int, default=10,
                     help='percentage of one epoch for loss output')
 parser.add_argument('--per_epoch', type=int, default=2,
@@ -32,7 +34,7 @@ parser.add_argument('--epochs', type=int, default=10)
 
 args = parser.parse_args()
 
-cuda = args.cuda and torch.cuda.is_available()
+cuda = ~args.no_cuda and torch.cuda.is_available()
 log_interval = args.log_interval
 epochs = args.epochs # for 5W images, each images 30 patches, each patch 10 times
 per_epoch = args.per_epoch
@@ -41,45 +43,20 @@ momentum = args.momentum
 txt_input = args.txt_input
 batch_size = args.batch_size
 num_workers = args.num_workers
+limited = args.limited
 
-if args.limited == True:
+if limited:
     num_faces = 2000 #7G ROM for 10000 28*28*3 numpy array
 else:
     num_faces = 10000
+
+print('Training face number {}/split'.format(num_faces))
 
 model = model.Net()
 if cuda:
     model.cuda()
 
 optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
-
-#face_dataset = dataset.FaceScoreDataset(image_list=txt_input,
-#                                        transform = transforms.Compose([
-#                                            dataset.RandomCrop(32),
-#                                            dataset.ToTensor()
-#
-#                                         ]))
-#debug for Dataset
-debug=0
-if debug:
-    print('FaceScoreDataset Initial: OK!')
-    exit(0)
-
-#for i in range(len(face_dataset)):
-#    sample = face_dataset[i]
-#
-#    print(i, sample['image'].shape, sample['score'])
-#    tools.show_image(sample['image'], sample['score'])
-
-#dataloader = DataLoader(face_dataset, batch_size=batch_size,
-#                        shuffle=True, num_workers=num_workers)
-
-# debug code
-#debug = 0
-#if debug:
-#    for i_batch, sample_batched in enumerate(dataloader):
-#        print(i_batch, sample_batched['image'].size(),
-#              sample_batched['score'].size())
 
 
 def train(epoch=1, limited=True):
@@ -96,9 +73,6 @@ def train(epoch=1, limited=True):
 
         # one dataset, get 30 dataloader
         for j in range(patch_per_face):
-            #print('Training: epoch_{}, split_{}/{}, patch_{}/{}'.format(epoch,
-            #                                                            i+1, num_split,
-            #                                                            j+1, patch_per_face))
             dataloader = tools.get_dataloader(face_dataset,
                                               batch_size=batch_size,
                                               shuffle=True,
@@ -130,7 +104,6 @@ def train(epoch=1, limited=True):
                         epoch, i+1, num_patches, num_total_patch,
                                 100. * num_patches / num_total_patch, loss.data[0]))
                     tools.evaluate_on_metric(output, score)
-
 
         # restore memory for next
         del face_dataset.images
@@ -186,7 +159,6 @@ def test(limited=True):
 
     del face_dataset.images
     gc.collect()
-
 
 
 for epoch in range(1, epochs + 1):

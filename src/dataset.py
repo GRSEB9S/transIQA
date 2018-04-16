@@ -352,8 +352,6 @@ class FaceScoreDataset(Dataset):
                 self.images.append(tools.standardize_image(
                     np.array(np.load(faces[i]), dtype=np.float32)))
                 self.scores.append(scores[i])
-                #if len(self.images) % 1000 == 0:
-                #    print('%d in %d'%(len(self.images), len(faces)))
         else:
             print('Loading Testing set')
             test_length = 8000
@@ -366,8 +364,6 @@ class FaceScoreDataset(Dataset):
                 self.images.append(tools.standardize_image(
                     np.array(np.load(faces[i]), dtype=np.float32)))
 
-                #if len(self.images) % 1000 == 0:
-                #    print('%d in %d'%(i, len(faces)))
                 self.scores[i - len(faces) + test_length] = float(scores[i])
 
     def __len__(self):

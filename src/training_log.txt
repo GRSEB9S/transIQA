@@ -1,0 +1,13 @@
+2000
+epoch: 1
+Testing
+Loading Testing set
+Testing Loss:3050.910507
+srocc:-0.068539
+lcc:0.095457
+Loading Training set
+Train Epoch: 1 Split: 1 [0/1500000 (0%)]	Loss: 3483.443359
+srocc:0.096749
+lcc:0.166772
+Loading Training set
+Loading Training set

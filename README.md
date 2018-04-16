@@ -4,21 +4,44 @@ Image quality assessment by transfer learning
 
 #### Dependencies:
 Dlib 19.10 (for human face detection)
-Scipy (for srocc & lcc evaluation)
+<br>Opencv-python (for imread)
+<br>Scipy (scipy.stats for srocc & lcc evaluation)
 
 #### Change log:
 
-**Next Version(0.17)**
+**Next Version(0.18)**
+1. **Algorithm convergence**
+    * BP method
+    * Learning rate
+    * and so on
+1. **System Integrity**
+    * Coding redundance 
+    * Coding reuse
+    * Coding robustness
+    * and so on
+1. **Model**
+    * Layer setting
+    * Loss function
+    * and so on
+
+**Version_0.17(16/04/18)**
 1. **Training function rewrite**
-    * one train(), one epoch
-    * per epoch: 5*reload Dataset
-    * per Dataset: 30 * iteration
+    * One train(), one epoch
+    * Per epoch: 5*reload Dataset(unlimited MODE for 16G ROM)
+    * Per Dataset: 30 * iteration
 1. **Loss**
-    * use L2-loss of pytorch
-    * define Loss function
+    * Use L2-loss of pytorch: _torch.nn.functional.mse_loss_
 1. **Evaluation**
     * Linear Correlation Coefficient(LCC)
     * Spearman Rank Order Correlation Coefficient(SROCC)
+1. **Technique detail**
+    1. _./src/tools.py_: write wrappers here for **Integrity**
+    1. Stantarize input image: at _./src/tools.standardize_image()_
+    1. Multiprocessing: try mtp while loading data. SEE _./src/mtp_using.py_
+    1. Argparse: In main.py, control running mode
+    1. Two running mode control: Limited and unlimited for pc and lab environment
+    1. LCC & SROCC: _scipy.stats_
+    1. _python *.py 2>&1 | tee ./src/training_log.txt_
 
 **Version_0.16(12/04/18)**
 1. **Dataset** dlib filtered faces
@@ -39,9 +62,7 @@ Scipy (for srocc & lcc evaluation)
     3. Dataset save and load: _np.save()_, _np.load()_
     4. Memory restore: _del_ and _gc.collect()_
     
-    
-    
-version_0.15(10/04/18):
+**version_0.15(10/04/18)**
 1. Dataset: full use:
 <br>dataset structure: ./pristine/, ./GB/GB1-5, ./GN/GN1-5,
  ./JP2K/JP2K1-5, ./JPEG/JPEG1-5
@@ -51,5 +72,5 @@ version_0.15(10/04/18):
 <br> tools.py: show image
 <br> model.py: net model structure
 
-version_0.10(09/04/18):
+**version_0.10(09/04/18)**
 <br>setup a simple network with dataset

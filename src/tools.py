@@ -127,7 +127,6 @@ def get_dataset(limited=True,
                     dataset.RandomCrop(32),
                     dataset.ToTensor()
                 ])):
-
     if train:
         face_dataset = dataset.FaceScoreDataset(limited=limited,
                                                 image_list=image_list,
@@ -137,23 +136,26 @@ def get_dataset(limited=True,
         face_dataset = dataset.FaceScoreDataset(limited=limited,
                                                 image_list = image_list,
                                                 train=False)
-
     return face_dataset
+
 
 def get_dataloader(face_dataset, batch_size, shuffle=True, num_workers=4):
 
     return DataLoader(face_dataset, batch_size=batch_size,
                      shuffle=shuffle, num_workers=num_workers)
 
+
 def np_load(path):
     print(path)
     return np.load(path)
+
 
 def standardize_image(image):
     mean = np.mean(image)
     std = np.std(image)
 
     return (image - mean) / (std + 1e-4)
+
 
 def evaluate_on_metric(hypo, score):
     '''
@@ -167,16 +169,15 @@ def evaluate_on_metric(hypo, score):
         hypo = np.array(hypo).reshape([-1])
 
     if type(hypo) == Variable:
-        hypo = hypo.data.numpy().reshape([-1])
+        hypo = hypo.data.cpu().numpy().reshape([-1])
     if type(score) == Variable:
-        score = score.data.numpy().reshape([-1])
+        score = score.data.cpu().numpy().reshape([-1])
 
-    #debug
+    # debug: make sure data formats
     debug=0
     if debug:
         print(hypo.shape)
         print(score.shape)
-        exit(0)
 
     srocc = stats.spearmanr(hypo, score)[0]
     lcc = stats.pearsonr(hypo, score)[0]
