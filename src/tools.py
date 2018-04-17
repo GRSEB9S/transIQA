@@ -8,6 +8,7 @@ from torch.autograd import Variable
 import dataset
 from scipy import stats
 import time
+import os.path as osp
 
 start = time.time()
 
@@ -161,7 +162,7 @@ def standardize_image(image):
     return (image - mean) / (std + 1e-4)
 
 
-def evaluate_on_metric(hypo, score):
+def evaluate_on_metric(hypo, score, log=True):
     '''
     
     :param hypo: numpy array
@@ -183,11 +184,13 @@ def evaluate_on_metric(hypo, score):
         print(hypo.shape)
         print(score.shape)
 
-    srocc = stats.spearmanr(hypo, score)[0]
     lcc = stats.pearsonr(hypo, score)[0]
+    srocc = stats.spearmanr(hypo, score)[0]
 
-    log_print('SROCC:{:.6f}'.format(srocc))
-    log_print('LCC:{:.6f}'.format(lcc))
+    if log:
+        log_print('LCC:{:.6f}'.format(lcc))
+        log_print('SROCC:{:.6f}'.format(srocc))
+    return lcc, srocc
 
 
 def log_print(suffix=''):
@@ -200,6 +203,7 @@ def log_print(suffix=''):
 
     print(str_time + ' ' + suffix)
 
+
 def save_model(model ,model_name='default', epoch=0):
 
     path = './model/'
@@ -207,3 +211,10 @@ def save_model(model ,model_name='default', epoch=0):
 
     log_print('SAVING MODEL: ' + model_path)
     torch.save(model, model_path)
+
+
+def exist_file(path, quit=False):
+    if osp.isfile(path):
+        return path
+    elif quit:
+        exit(0)

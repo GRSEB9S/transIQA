@@ -20,18 +20,28 @@ parser.add_argument('--log_interval', type=int, default=50,
                     help='percentage of one epoch for loss output')
 parser.add_argument('--per_epoch', type=int, default=2,
                     help='validation output control')
-parser.add_argument('--lr', type=float, default=1e-6,
+parser.add_argument('--lr', type=float, default=1e-4,
                     help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.5,
-                    help='momentum')
 parser.add_argument('--txt_input', type=str, default='./data/face_score_generated_dlib.txt',
                     help='input image path for training and validation')
 parser.add_argument('--batch_size', type=int, default=64,
                     help='input batch size for training')
 parser.add_argument('--num_workers', type=int, default=4,
                     help='workers for getting pictures')
-parser.add_argument('--epochs', type=int, default=10)
-parser.add_argument('--model_epoch', type=int, default=1)
+parser.add_argument('--epochs', type=int, default=50,
+                    help='total training epoch')
+parser.add_argument('--model_epoch', type=int, default=50,
+                    help='epoch for saving model')
+parser.add_argument('--optimizer', type=str, default='adam',
+                    help='choose optimizer')
+parser.add_argument('--train_loss', type=str, default='mse',
+                    help='define training loss used')
+parser.add_argument('--test_loss', type=str, default='mse',
+                    help='define testing loss used')
+parser.add_argument('--data_log', type=str, default='',
+                    help='path to write data for visualization')
+parser.add_argument('--data_log_per_epoch', type=int, default='100',
+                    help='per epoch for one training data log')
 
 args = parser.parse_args()
 
@@ -40,12 +50,16 @@ log_interval = args.log_interval
 epochs = args.epochs # for 5W images, each images 30 patches, each patch 10 times
 per_epoch = args.per_epoch
 lr = args.lr
-momentum = args.momentum
 txt_input = args.txt_input
 batch_size = args.batch_size
 num_workers = args.num_workers
 limited = args.limited
 model_epoch = args.model_epoch
+data_log = args.data_log
+if data_log != '':
+    write_data = True
+else: write_data = False
+data_log_per_epoch = args.data_log_per_epoch
 
 if limited:
     num_faces = 2000 #7G ROM for 10000 28*28*3 numpy array
@@ -54,11 +68,15 @@ else:
 
 tools.log_print('{} faces/split'.format(num_faces))
 
-model = model.Net()
+model = model.Net_deep()
 if cuda:
     model.cuda()
 
-optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum)
+if args.optimizer == 'adam':
+    optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))
+elif args.optimizer == 'sgd':
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.8)
+else: exit(0)
 
 
 def train(epoch=1, limited=True):
@@ -68,6 +86,8 @@ def train(epoch=1, limited=True):
     patch_per_face = 30
     num_total_patch = 50000 * patch_per_face
     log_patch = int(num_total_patch / log_interval)
+    data_log_per_patch = num_total_patch // data_log_per_epoch
+    data_log_time = 0
 
     # for one train, five dataloader
     for i in range(num_split):
@@ -96,11 +116,27 @@ def train(epoch=1, limited=True):
 
                 optimizer.zero_grad()
                 output = model(image)
-                loss = F.mse_loss(output, score)
+                if args.train_loss == 'mse':
+                    loss = F.mse_loss(output, score)
+                elif args.train_loss == 'mae':
+                    loss = F.l1_loss(output, score)
+                else: exit(0)
                 loss.backward()
                 optimizer.step()
-
                 num_patches = i*patch_per_face*num_faces + j*num_faces + batch_idx*batch_size
+
+                if write_data and data_log_time * data_log_per_patch < num_patches:
+                    with open(data_log, 'a') as f:
+
+                        lcc, srocc = tools.evaluate_on_metric(output, score, log=False)
+                        line= 'train epoch:{} percent:{:.6f} loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'.format(epoch,
+                                                                                                           num_patches/num_total_patch,
+                                                                                                           loss.data[0],
+                                                                                                           lcc,
+                                                                                                           srocc)
+                        f.write(line)
+                        data_log_time += 1
+
                 if num_patches % log_patch == 0:
                     tools.log_print('Epoch_{} Split_{} [{}/{} ({:.0f}%)]\tLoss: {:.2f}'.format(
                         epoch, i+1, num_patches, num_total_patch,
@@ -110,6 +146,8 @@ def train(epoch=1, limited=True):
         # restore memory for next
         del face_dataset.images
         gc.collect()
+
+        test(limited=limited)
 
 
 def test(limited=True):
@@ -155,21 +193,36 @@ def test(limited=True):
         output = sum(output) / 30
         outputs.append(output)
 
-    loss = np.mean((np.array(outputs - scores)) ** 2)
+
+    if args.test_loss == 'mse':
+        loss = np.mean((np.array(outputs - scores)) ** 2)
+    elif args.test_loss == 'mae':
+        loss = np.mean(np.abs(np.array(outputs - scores)))
     tools.log_print('TESTING LOSS:{:.6f}'.format(loss))
-    tools.evaluate_on_metric(outputs, scores)
+    lcc, srocc = tools.evaluate_on_metric(outputs, scores)
+    if write_data:
+        with open(data_log, 'a') as f:
+            f.write('test loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'.format(loss, lcc, srocc))
 
     del face_dataset.images
     gc.collect()
 
 
+print('Logging data info to: {}'.format(data_log))
+print(args)
+print(model)
+if write_data:
+    with open(data_log, 'a') as f:
+        f.write(str(args) + '\n')
+        f.write(str(model) + '\n')
+
 for epoch in range(1, epochs+1):
 
     tools.log_print('Epoch: {}'.format(epoch))
 
-    if epoch % per_epoch == 1:
-        tools.log_print('Testing')
-        test(limited=args.limited)
+    #if epoch % per_epoch == 1:
+    #    tools.log_print('Testing')
+    #    test(limited=limited)
 
     train(epoch, limited=args.limited)
 

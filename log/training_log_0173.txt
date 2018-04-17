@@ -1,0 +1,1 @@
+Namespace(log_path='./log/training_log_0173.txt')

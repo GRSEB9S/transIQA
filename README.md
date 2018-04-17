@@ -14,10 +14,11 @@ Dlib 19.10 (for human face detection)
     * BP method
     * Learning rate
     * and so on
-1. **System Integrity**
+1. **Code**
     * Usability
         * log time
         * save model
+        * draw pictures
     * Coding redundance 
     * Coding reuse
     * Coding robustness
