@@ -8,27 +8,44 @@ Dlib 19.10 (for human face detection)
 <br>Scipy (scipy.stats for srocc & lcc evaluation)
 
 #### Change log:
-
-**Next Version(0.18)**
+**Next Version(0.19)**
+1. **New model**
+    * Architecture
 1. **Algorithm convergence**
-    * BP method
-    * Learning rate
+    * Learning rate decay
     * and so on
 1. **Code**
     * Usability
-        * log time
-        * save model
-        * draw pictures
-    * Coding redundance 
-    * Coding reuse
-    * Coding robustness
-    * Coding Readable
-    * and so on
-1. **Model**
-    * Layer setting
-    * Loss function
+    * Redundance 
+    * Reuse
+    * Robustness
+    * Readable
     * and so on
 
+**Version_0.18(18/04/18)**
+1. **Model**
+    * Layer setting: _12-layers_ deep net from [A deep neural network for image quality assessment](https://ieeexplore.ieee.org/document/7533065/)
+    * Loss function: _mae_ perform better than _mse_
+    * Outcome: _./log/data_log_0180.txt_ & _./log/training_log_0180.txt_
+        * after _130_ epochs, _lcc>0.96_, _srocc>0.95_
+1. **Algorithm convergence**
+    * BP method: _torch.optim.Adam_
+    * Learning rate: _lr=1e-4_, _betas=(0.9, 0.99)_
+1. **Code**
+    * Usability
+        * log time: _./src/tools.log_print_
+        * save model: _./src/tools.save_model_
+        * training data output: _./src/main.py_ 
+        * training data visualization: _./src/draft/draw_from_log.py_
+1. **Technique detail**
+    * Training data visualization
+        * Data log: _print(str(x))_, _f.write(x, 'a')_
+        * Data visualizaiton: _./src/draft/draw_from_log.py_
+    * Code: _./src/main.py_
+        * Add loss & optimizer control
+        * Add _test()_ for each split of epochs
+        * Add data log control
+        
 **Version_0.17(16/04/18)**
 1. **Training function rewrite**
     * One train(), one epoch

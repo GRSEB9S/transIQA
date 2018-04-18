@@ -10,11 +10,15 @@ parser.add_argument('--log_path', type=str, default='./log/data_log_0174',
                     help='['']path for log file')
 parser.add_argument('--start', type=int, default=0,
                     help='read start from line')
+parser.add_argument('--loss_max', type=float, default=200.,
+                    help='[200]ylim of loss subplot')
 
 args = parser.parse_args()
 
 log_path = args.log_path
 start = args.start
+loss_max = args.loss_max
+
 
 
 def read_file(file_path):
@@ -114,7 +118,7 @@ if osp.isfile(log_path):
     plt.subplot(212)
     plt.plot(train, train_loss, 'y', test, test_loss, 'b')
     plt.grid(True)
-    plt.ylim((0, 200))
+    plt.ylim((0, loss_max))
     plt.title('loss')
 
     plt.show()
