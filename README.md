@@ -16,6 +16,7 @@ Dlib 19.10 (for human face detection)
     * and so on
 1. **Code**
     * Usability
+        * Model restore
     * Redundance 
     * Reuse
     * Robustness

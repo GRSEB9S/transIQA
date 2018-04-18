@@ -1,5 +1,5 @@
 import tools
-import model
+from model import Net_deep
 import dataset
 import argparse
 import torch
@@ -17,38 +17,39 @@ parser.add_argument('--no_cuda', action="store_true",
                     help='cuda disable switch')
 
 parser.add_argument('--log_interval', type=int, default=50,
-                    help='percentage of one epoch for loss output')
-parser.add_argument('--per_epoch', type=int, default=2,
-                    help='validation output control')
+                    help='[50]percentage of one epoch for loss output')
 parser.add_argument('--lr', type=float, default=1e-4,
-                    help='learning rate')
+                    help='[1e-4]learning rate')
 parser.add_argument('--txt_input', type=str, default='./data/face_score_generated_dlib.txt',
-                    help='input image path for training and validation')
+                    help='[./data/face_score_generated_dlib.txt]input image path for training and validation')
 parser.add_argument('--batch_size', type=int, default=64,
-                    help='input batch size for training')
+                    help='[64]input batch size for training')
 parser.add_argument('--num_workers', type=int, default=4,
-                    help='workers for getting pictures')
+                    help='[4]workers for getting pictures')
 parser.add_argument('--epochs', type=int, default=50,
-                    help='total training epoch')
+                    help='[50]total training epoch')
 parser.add_argument('--model_epoch', type=int, default=50,
-                    help='epoch for saving model')
+                    help='[50]epoch for saving model')
 parser.add_argument('--optimizer', type=str, default='adam',
-                    help='choose optimizer')
+                    help='[adm]choose optimizer')
 parser.add_argument('--train_loss', type=str, default='mse',
-                    help='define training loss used')
+                    help='[mse]define training loss used')
 parser.add_argument('--test_loss', type=str, default='mse',
-                    help='define testing loss used')
+                    help='[mse]define testing loss used')
 parser.add_argument('--data_log', type=str, default='',
-                    help='path to write data for visualization')
+                    help='['']path to write data for visualization')
 parser.add_argument('--data_log_per_epoch', type=int, default='100',
-                    help='per epoch for one training data log')
+                    help='[100]per epoch for one training data log')
+parser.add_argument('--reload_model', type=str, default='',
+                    help='['']path for model to continue')
+parser.add_argument('--reload_epoch', type=int, default=0,
+                    help='[0]epoch of the model to continue')
 
 args = parser.parse_args()
 
 cuda = ~args.no_cuda and torch.cuda.is_available()
 log_interval = args.log_interval
 epochs = args.epochs # for 5W images, each images 30 patches, each patch 10 times
-per_epoch = args.per_epoch
 lr = args.lr
 txt_input = args.txt_input
 batch_size = args.batch_size
@@ -56,10 +57,16 @@ num_workers = args.num_workers
 limited = args.limited
 model_epoch = args.model_epoch
 data_log = args.data_log
+reload_model = args.reload_model
+reload_epoch = args.reload_epoch
 if data_log != '':
     write_data = True
 else: write_data = False
 data_log_per_epoch = args.data_log_per_epoch
+if reload_model != '' and reload_epoch != 0:
+    reload = True
+
+
 
 if limited:
     num_faces = 2000 #7G ROM for 10000 28*28*3 numpy array
@@ -68,7 +75,10 @@ else:
 
 tools.log_print('{} faces/split'.format(num_faces))
 
-model = model.Net_deep()
+if reload:
+    model = torch.load(reload_model)
+else:
+    model = Net_deep()
 if cuda:
     model.cuda()
 
@@ -218,6 +228,8 @@ if write_data:
 
 for epoch in range(1, epochs+1):
 
+    if reload:
+        epoch += reload_epoch
     tools.log_print('Epoch: {}'.format(epoch))
 
     #if epoch % per_epoch == 1:
