@@ -161,7 +161,8 @@ def train(epoch=1, limited=True):
 
 
 def test(limited=True):
-    #model.test()
+    #model.eval()
+    print(model)
 
     face_dataset = tools.get_dataset(limited=limited, train=False, image_list=txt_input)
 
@@ -226,6 +227,7 @@ if write_data:
         f.write(str(args) + '\n')
         f.write(str(model) + '\n')
 
+test(limited=limited)
 for epoch in range(1, epochs+1):
 
     if reload:
@@ -236,7 +238,7 @@ for epoch in range(1, epochs+1):
     #    tools.log_print('Testing')
     #    test(limited=limited)
 
-    train(epoch, limited=args.limited)
+    train(epoch, limited=limited)
 
     if epoch % model_epoch == 0:
         tools.save_model(model=model, model_name='cuda_' + str(cuda), epoch=epoch)
