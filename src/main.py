@@ -59,13 +59,11 @@ model_epoch = args.model_epoch
 data_log = args.data_log
 reload_model = args.reload_model
 reload_epoch = args.reload_epoch
-if data_log != '':
-    write_data = True
-else: write_data = False
+write_data = True if data_log != '' \
+    else False
 data_log_per_epoch = args.data_log_per_epoch
-if reload_model != '' and reload_epoch != 0:
-    reload = True
-
+reload = True if reload_model != '' and reload_epoch != 0 \
+    else False
 
 
 if limited:
@@ -89,8 +87,9 @@ elif args.optimizer == 'sgd':
 else: exit(0)
 
 
-def train(epoch=1, limited=True):
-    model.train()
+def train(model, epoch=1, limited=True):
+    model_train = model
+    model_train.train()
 
     num_split = int(50000 / num_faces)
     patch_per_face = 30
@@ -125,7 +124,7 @@ def train(epoch=1, limited=True):
                    exit(0)
 
                 optimizer.zero_grad()
-                output = model(image)
+                output = model_train(image)
                 if args.train_loss == 'mse':
                     loss = F.mse_loss(output, score)
                 elif args.train_loss == 'mae':
@@ -160,9 +159,9 @@ def train(epoch=1, limited=True):
         test(limited=limited)
 
 
-def test(limited=True):
-    #model.eval()
-    print(model)
+def test(model, limited=True):
+    model_test = model
+    model_test.eval()
 
     face_dataset = tools.get_dataset(limited=limited, train=False, image_list=txt_input)
 
@@ -200,10 +199,9 @@ def test(limited=True):
             patches = patches.cuda()
         patches = Variable(patches)
 
-        output = model(patches).data
+        output = model_test(patches).data
         output = sum(output) / 30
         outputs.append(output)
-
 
     if args.test_loss == 'mse':
         loss = np.mean((np.array(outputs - scores)) ** 2)
@@ -219,26 +217,48 @@ def test(limited=True):
     gc.collect()
 
 
-print('Logging data info to: {}'.format(data_log))
-print(args)
-print(model)
-if write_data:
-    with open(data_log, 'a') as f:
-        f.write(str(args) + '\n')
-        f.write(str(model) + '\n')
+def main():
 
-test(limited=limited)
-for epoch in range(1, epochs+1):
+    print('Logging data info to: {}'.format(data_log))
+    print(args)
+    print(model)
+    if write_data:
+        with open(data_log, 'a') as f:
+            f.write(str(args) + '\n')
+            f.write(str(model) + '\n')
 
-    if reload:
-        epoch += reload_epoch
-    tools.log_print('Epoch: {}'.format(epoch))
+    test(limited=limited)
+    for epoch in range(1, epochs+1):
 
-    #if epoch % per_epoch == 1:
-    #    tools.log_print('Testing')
-    #    test(limited=limited)
+        if reload:
+            epoch += reload_epoch
+        tools.log_print('Epoch: {}'.format(epoch))
 
-    train(epoch, limited=limited)
+        #if epoch % per_epoch == 1:
+        #    tools.log_print('Testing')
+        #    test(limited=limited)
 
-    if epoch % model_epoch == 0:
-        tools.save_model(model=model, model_name='cuda_' + str(cuda), epoch=epoch)
+        train(epoch, limited=limited)
+
+        if epoch % model_epoch == 0:
+            tools.save_model(model=model, model_name='cuda_' + str(cuda), epoch=epoch)
+
+
+def test_model():
+
+    model_root = './model/'
+
+    for i in range(11):
+        num = i * 50 + 150
+        model_name = 'cuda_True_epoch_' + str(num)
+        model_path = model_root + model_name
+
+        tools.log_print('loading model:{}'.format(model_path))
+        model = torch.load(model_path)
+        if cuda:
+            model.cuda()
+
+        test(model=model, limited=limited)
+
+
+test_model()
