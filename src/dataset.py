@@ -116,6 +116,7 @@ class FaceScoreDataset_015(Dataset):
 
         return sample
 
+
 class FaceScoreDataset_0152(Dataset):
     """Face Score dataset"""
 
@@ -183,6 +184,7 @@ class FaceScoreDataset_0152(Dataset):
             sample = self.transform(sample)
 
         return sample
+
 
 class FaceScoreDataset_MTP(Dataset):
     """MTP"""
@@ -304,6 +306,7 @@ class FaceScoreDataset_MTP(Dataset):
 
         return sample
 
+
 class FaceScoreDataset(Dataset):
     """Face Score dataset"""
 
@@ -385,6 +388,87 @@ class FaceScoreDataset(Dataset):
             #exit(0)
 
         score = np.array((float(self.scores[idx])), dtype=np.float32).reshape([1])#IMPORTANT
+        sample = {'image': image, 'score': score}
+
+        if self.transform:
+            sample = self.transform(sample)
+
+        return sample
+
+
+class LiveDataset(Dataset):
+    """LIVE dataset"""
+
+    def __init__(self, live_train, live_test, transform=None, limited=True, train=True):
+        """
+        initiate image list and score
+        """
+        train_live = [line.rstrip('\n').split()[0] for line in open(live_train)]
+        train_scores = [line.rstrip('\n').split()[1] for line in open(live_train)]
+        test_live = [line.rstrip('\n').split()[0] for line in open(live_test)]
+        test_scores = [line.rstrip('\n').split()[1] for line in open(live_test)]
+        self.limited = limited
+        self.transform = transform
+        self.train_images = []
+        self.train_scores = []
+        self.test_images = []
+        self.test_scores = []
+
+        # debug: show image shape
+        debug = False
+        if debug:
+            num = 0
+            path = []
+            for i in self.images:
+                fault_path = tools.show_image_depth(i)
+                if fault_path != '':
+                    path.append(fault_path)
+                    num += 1
+            print(num)
+            print(path)
+            exit(0)
+
+        # reading datasets
+        tools.log_print('Loading Training set')
+        num_train = len(train_live)
+        for i in np.random.choice(num_train, num_train):
+            #debug
+            debug=0
+            if debug:
+                print(i)
+            img = cv2.imread(train_live[i])
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            self.train_images.append(tools.standardize_image(
+                np.array(img, dtype=np.float32)))
+            self.train_scores.append(train_scores[i])
+
+        tools.log_print('Loading Testing set')
+        num_test = len(test_live)
+        self.test_scores = np.zeros(num_test)
+        for i in range(num_test):
+            img = cv2.imread(test_live[i])
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            self.test_images.append(tools.standardize_image(
+                np.array(img, dtype=np.float32)))
+            self.test_scores[i] = float(test_scores[i])
+
+    def __len__(self):
+        return len(self.train_images)
+
+    def __getitem__(self, idx):
+
+        image = self.train_images[idx]
+
+        # debug
+        debug = 0
+        if debug:
+            print(image.dtype)
+            print(np.array(image, dtype=np.float32).dtype)
+            print(image.shape)
+            tools.show_image(np.array(image, dtype=np.int)) # interfaces is not supported for multi-processing
+            #exit(0)
+
+        score = np.array((float(self.train_scores[idx])), dtype=np.float32).reshape([1])#IMPORTANT
         sample = {'image': image, 'score': score}
 
         if self.transform:

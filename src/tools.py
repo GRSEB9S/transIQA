@@ -143,6 +143,16 @@ def get_dataset(limited=True,
                                                 train=False)
     return face_dataset
 
+def get_live_dataset(live_train='',
+                     live_test='',
+                     transform=transforms.Compose([
+                         dataset.RandomCrop(32),
+                         dataset.ToTensor()
+                     ])):
+    return dataset.LiveDataset(live_train=live_train,
+                               live_test=live_test,
+                               transform=transform)
+
 
 def get_dataloader(face_dataset, batch_size, shuffle=True, num_workers=4):
 
@@ -159,7 +169,7 @@ def standardize_image(image):
     mean = np.mean(image)
     std = np.std(image)
 
-    return (image - mean) / (std + 1e-4)
+    return (image - mean) / (std + 1e-6)
 
 
 def evaluate_on_metric(hypo, score, log=True):

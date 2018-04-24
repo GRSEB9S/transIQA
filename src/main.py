@@ -64,6 +64,8 @@ write_data = True if data_log != '' \
 data_log_per_epoch = args.data_log_per_epoch
 reload = True if reload_model != '' and reload_epoch != 0 \
     else False
+train_loss = args.train_loss
+test_loss = args.test_loss
 
 
 if limited:
@@ -125,9 +127,9 @@ def train(model, epoch=1, limited=True):
 
                 optimizer.zero_grad()
                 output = model_train(image)
-                if args.train_loss == 'mse':
+                if train_loss == 'mse':
                     loss = F.mse_loss(output, score)
-                elif args.train_loss == 'mae':
+                elif train_loss == 'mae':
                     loss = F.l1_loss(output, score)
                 else: exit(0)
                 loss.backward()
@@ -203,9 +205,9 @@ def test(model, limited=True):
         output = sum(output) / 30
         outputs.append(output)
 
-    if args.test_loss == 'mse':
+    if test_loss == 'mse':
         loss = np.mean((np.array(outputs - scores)) ** 2)
-    elif args.test_loss == 'mae':
+    elif test_loss == 'mae':
         loss = np.mean(np.abs(np.array(outputs - scores)))
     tools.log_print('TESTING LOSS:{:.6f}'.format(loss))
     lcc, srocc = tools.evaluate_on_metric(outputs, scores)
@@ -261,4 +263,4 @@ def test_model():
         test(model=model, limited=limited)
 
 
-test_model()
+# test_model()

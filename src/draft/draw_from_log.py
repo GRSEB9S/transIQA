@@ -20,7 +20,6 @@ start = args.start
 loss_max = args.loss_max
 
 
-
 def read_file(file_path):
 
     lines = []
@@ -71,10 +70,10 @@ def get_test_score(lines):
         if split_line[0] == 'test':
             epoch = int(lines[i-1].split()[1][6:]) \
                 if lines[i-1].split()[0] == 'train' \
-                else int(lines[i+1].split()[0][6:])
+                else int(lines[i+1].split()[1][6:])
             percent = float(lines[i-1].split()[2][8:]) \
                 if lines[i-1].split()[0] == 'train' \
-                else int(lines[i+1].split()[2][8:])
+                else float(lines[i+1].split()[2][8:])
             loss = float(split_line[1][5:])
             lcc =  float(split_line[2][4:])
             srocc = float(split_line[3][6:])
@@ -122,4 +121,5 @@ if osp.isfile(log_path):
     plt.title('loss')
 
     plt.show()
+
 
