@@ -1,0 +1,151 @@
+Namespace(batch_size=32, data_log='./log/ft2/live_180.txt', dataset='live', epoch_reload=0, epochs=5000, load_model='./model/scratch/cuda_True_epoch_550', lr=1e-05, mode='ft2', model_epoch=200, model_reload='', model_save='./model/ft2/live', num_workers=4, optimizer='adam', test_loss='mae', train_loss='mae')
+Net_deep(
+  (features): Sequential(
+    (0): Conv2d(3, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): ReLU(inplace)
+    (2): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): ReLU(inplace)
+    (4): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+    (5): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (6): ReLU(inplace)
+    (7): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (8): ReLU(inplace)
+    (9): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+    (10): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (11): ReLU(inplace)
+    (12): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (13): ReLU(inplace)
+    (14): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+    (15): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (16): ReLU(inplace)
+    (17): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (18): ReLU(inplace)
+    (19): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+    (20): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (21): ReLU(inplace)
+    (22): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (23): ReLU(inplace)
+    (24): MaxPool2d(kernel_size=(2, 2), stride=(2, 2), dilation=(1, 1), ceil_mode=False)
+  )
+  (classifiers): Sequential(
+    (0): Linear(in_features=512, out_features=512, bias=True)
+    (1): Dropout(p=0.5, inplace)
+    (2): Linear(in_features=512, out_features=512, bias=True)
+    (fc3): Linear(in_features=512, out_features=1, bias=True)
+  )
+  (logistic): Logistic(
+  )
+)
+test loss:34.7227 lcc:-0.1943 srocc:-0.2288
+train epoch:1 percent:0.000000 loss:8.5830 lcc:0.9586 srocc:0.8986
+test loss:13.4064 lcc:0.8540 srocc:0.9340
+train epoch:2 percent:0.000000 loss:11.1613 lcc:0.7950 srocc:0.8424
+test loss:11.2574 lcc:0.8642 srocc:0.9322
+train epoch:3 percent:0.000000 loss:12.9056 lcc:0.8535 srocc:0.8528
+test loss:9.6716 lcc:0.8862 srocc:0.9318
+train epoch:4 percent:0.000000 loss:9.7353 lcc:0.8679 srocc:0.8389
+test loss:8.7871 lcc:0.9033 srocc:0.9333
+train epoch:5 percent:0.000000 loss:10.0285 lcc:0.8145 srocc:0.8268
+test loss:7.8943 lcc:0.9174 srocc:0.9323
+train epoch:6 percent:0.000000 loss:12.7954 lcc:0.7605 srocc:0.7792
+test loss:7.6196 lcc:0.9189 srocc:0.9317
+train epoch:7 percent:0.000000 loss:9.8144 lcc:0.6074 srocc:0.5879
+test loss:7.3844 lcc:0.9246 srocc:0.9345
+train epoch:8 percent:0.000000 loss:8.0219 lcc:0.9024 srocc:0.9273
+test loss:7.1906 lcc:0.9251 srocc:0.9312
+train epoch:9 percent:0.000000 loss:9.5683 lcc:0.7869 srocc:0.7842
+test loss:7.3694 lcc:0.9235 srocc:0.9291
+train epoch:10 percent:0.000000 loss:7.8837 lcc:0.8324 srocc:0.8651
+test loss:7.1558 lcc:0.9270 srocc:0.9346
+train epoch:11 percent:0.000000 loss:8.3947 lcc:0.8265 srocc:0.7792
+test loss:7.2274 lcc:0.9258 srocc:0.9322
+train epoch:12 percent:0.000000 loss:7.5873 lcc:0.8881 srocc:0.6201
+test loss:7.1144 lcc:0.9255 srocc:0.9290
+train epoch:13 percent:0.000000 loss:11.3394 lcc:0.6547 srocc:0.7178
+test loss:7.2566 lcc:0.9235 srocc:0.9315
+train epoch:14 percent:0.000000 loss:11.2150 lcc:0.8281 srocc:0.8909
+test loss:7.0153 lcc:0.9261 srocc:0.9301
+train epoch:15 percent:0.000000 loss:4.9194 lcc:0.9656 srocc:0.8567
+test loss:7.2225 lcc:0.9237 srocc:0.9317
+train epoch:16 percent:0.000000 loss:11.3595 lcc:0.7349 srocc:0.7333
+test loss:7.1477 lcc:0.9277 srocc:0.9325
+train epoch:17 percent:0.000000 loss:13.0391 lcc:0.7411 srocc:0.6485
+test loss:7.0786 lcc:0.9273 srocc:0.9334
+train epoch:18 percent:0.000000 loss:12.7558 lcc:0.5661 srocc:0.7538
+test loss:6.9628 lcc:0.9291 srocc:0.9377
+train epoch:19 percent:0.000000 loss:9.2633 lcc:0.5363 srocc:0.3939
+test loss:6.9778 lcc:0.9309 srocc:0.9374
+train epoch:20 percent:0.000000 loss:9.0657 lcc:0.8898 srocc:0.8406
+test loss:7.2624 lcc:0.9253 srocc:0.9308
+train epoch:21 percent:0.000000 loss:13.6476 lcc:0.7708 srocc:0.8389
+test loss:6.8496 lcc:0.9295 srocc:0.9354
+train epoch:22 percent:0.000000 loss:13.2121 lcc:0.7814 srocc:0.7538
+test loss:7.0811 lcc:0.9265 srocc:0.9322
+train epoch:23 percent:0.000000 loss:4.9079 lcc:0.9489 srocc:0.8879
+test loss:7.2060 lcc:0.9277 srocc:0.9328
+train epoch:24 percent:0.000000 loss:13.1932 lcc:0.2656 srocc:0.1030
+test loss:7.0168 lcc:0.9289 srocc:0.9371
+train epoch:25 percent:0.000000 loss:11.3782 lcc:0.6923 srocc:0.6201
+test loss:6.8667 lcc:0.9322 srocc:0.9358
+train epoch:26 percent:0.000000 loss:7.8787 lcc:0.8875 srocc:0.8389
+test loss:6.9472 lcc:0.9311 srocc:0.9375
+train epoch:27 percent:0.000000 loss:9.3865 lcc:0.9089 srocc:0.6687
+test loss:6.8871 lcc:0.9328 srocc:0.9391
+train epoch:28 percent:0.000000 loss:5.1603 lcc:0.9214 srocc:0.9510
+test loss:7.0669 lcc:0.9293 srocc:0.9347
+train epoch:29 percent:0.000000 loss:4.1394 lcc:0.9902 srocc:0.8896
+test loss:6.9041 lcc:0.9303 srocc:0.9385
+train epoch:30 percent:0.000000 loss:6.2114 lcc:0.9687 srocc:0.9510
+test loss:6.9484 lcc:0.9294 srocc:0.9355
+train epoch:31 percent:0.000000 loss:9.5643 lcc:0.6777 srocc:0.8182
+test loss:6.8925 lcc:0.9289 srocc:0.9343
+train epoch:32 percent:0.000000 loss:10.4813 lcc:0.8209 srocc:0.9019
+test loss:6.9618 lcc:0.9296 srocc:0.9354
+train epoch:33 percent:0.000000 loss:9.8165 lcc:0.9168 srocc:0.9515
+test loss:6.9268 lcc:0.9286 srocc:0.9338
+train epoch:34 percent:0.000000 loss:7.0803 lcc:0.9388 srocc:0.9442
+test loss:6.9083 lcc:0.9293 srocc:0.9340
+train epoch:35 percent:0.000000 loss:5.5782 lcc:0.9747 srocc:0.9245
+test loss:6.7865 lcc:0.9302 srocc:0.9369
+train epoch:36 percent:0.000000 loss:7.6739 lcc:0.9554 srocc:0.8754
+test loss:6.7736 lcc:0.9309 srocc:0.9371
+train epoch:37 percent:0.000000 loss:8.0911 lcc:0.8971 srocc:0.7091
+test loss:6.8275 lcc:0.9315 srocc:0.9369
+train epoch:38 percent:0.000000 loss:6.8286 lcc:0.9529 srocc:0.9265
+test loss:6.8793 lcc:0.9318 srocc:0.9383
+train epoch:39 percent:0.000000 loss:5.5018 lcc:0.9262 srocc:0.9387
+test loss:6.7146 lcc:0.9308 srocc:0.9360
+train epoch:40 percent:0.000000 loss:8.0939 lcc:0.8183 srocc:0.6848
+test loss:6.6420 lcc:0.9322 srocc:0.9363
+train epoch:41 percent:0.000000 loss:12.7872 lcc:0.7577 srocc:0.6485
+test loss:6.8252 lcc:0.9297 srocc:0.9327
+train epoch:42 percent:0.000000 loss:6.7232 lcc:0.9006 srocc:0.8903
+test loss:6.7705 lcc:0.9330 srocc:0.9368
+train epoch:43 percent:0.000000 loss:7.5377 lcc:0.9058 srocc:0.8599
+test loss:6.8697 lcc:0.9319 srocc:0.9384
+train epoch:44 percent:0.000000 loss:8.9279 lcc:0.8912 srocc:0.8774
+test loss:6.8785 lcc:0.9332 srocc:0.9392
+train epoch:45 percent:0.000000 loss:13.8841 lcc:0.7286 srocc:0.7576
+test loss:6.4341 lcc:0.9374 srocc:0.9424
+train epoch:46 percent:0.000000 loss:6.6820 lcc:0.9249 srocc:0.9019
+test loss:6.7263 lcc:0.9328 srocc:0.9380
+train epoch:47 percent:0.000000 loss:6.7893 lcc:0.9181 srocc:0.8469
+test loss:6.8558 lcc:0.9295 srocc:0.9335
+train epoch:48 percent:0.000000 loss:7.4017 lcc:0.8750 srocc:0.8061
+test loss:6.7522 lcc:0.9329 srocc:0.9377
+train epoch:49 percent:0.000000 loss:6.8257 lcc:0.9208 srocc:0.8632
+test loss:6.7222 lcc:0.9307 srocc:0.9367
+train epoch:50 percent:0.000000 loss:9.8777 lcc:0.7765 srocc:0.7939
+test loss:6.7574 lcc:0.9324 srocc:0.9383
+train epoch:51 percent:0.000000 loss:7.3927 lcc:0.9275 srocc:0.8511
+test loss:6.6549 lcc:0.9338 srocc:0.9378
+train epoch:52 percent:0.000000 loss:10.6206 lcc:0.6435 srocc:0.4970
+test loss:6.6393 lcc:0.9357 srocc:0.9415
+train epoch:53 percent:0.000000 loss:5.8895 lcc:0.9512 srocc:0.9605
+test loss:6.8001 lcc:0.9327 srocc:0.9392
+train epoch:54 percent:0.000000 loss:8.9141 lcc:0.9118 srocc:0.9394
+test loss:6.8719 lcc:0.9289 srocc:0.9342
+train epoch:55 percent:0.000000 loss:7.8238 lcc:0.9066 srocc:0.8632
+test loss:6.8112 lcc:0.9333 srocc:0.9379
+train epoch:56 percent:0.000000 loss:5.8132 lcc:0.9375 srocc:0.9265
+test loss:6.6810 lcc:0.9336 srocc:0.9365

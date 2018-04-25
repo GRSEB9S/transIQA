@@ -105,11 +105,12 @@ class Net_deep(nn.Module):
         )
         '''
 
-        self.classifiers = nn.Sequential(OrderedDict([
-            (('fc1'), nn.Linear(2, 1)),
+        self.classifiers = nn.Sequential(
+            nn.Linear(2, 1),
+            nn.Linear(1, 1)
             # nn.Dropout(p=0.5, inplace=True),
             #nn.Linear(512, 1)
-        ]))
+        )
         self.classifiers.add_module(name='fc3', module=nn.Linear(1, 1))
 
         '''
@@ -135,9 +136,11 @@ class Logistic(nn.Module):
 
     def __init__(self):
         super(Logistic, self).__init__()
-        self.x0 = nn.Parameter(torch.from_numpy(np.array([1.])))
-        self.k = nn.Parameter(torch.from_numpy(np.array([2.])))
-        self.L = nn.Parameter(torch.from_numpy(np.array([3.])))
+        # torch default is FloatTensor -> np.float32.
+        # np.array([1.]).dtype=np.float64
+        self.x0 = nn.Parameter(torch.from_numpy(np.array([1.], dtype=np.float32)))
+        self.k = nn.Parameter(torch.from_numpy(np.array([2.], dtype=np.float32)))
+        self.L = nn.Parameter(torch.from_numpy(np.array([3.], dtype=np.float32)))
 
     def forward(self, x):
         x0 = self.x0.expand_as(x)
@@ -185,7 +188,9 @@ def add_module():
     print('-'*10)
     print(model.named_modules())
     print('-'*10)
-    print(model.classifiers.fc1)
+    print(model.classifiers._modules['1'])
+    model.classifiers._modules['1'] = nn.Linear(1, 2)
+    print(model)
     print('-'*10)
     for i in model.parameters():
         i.requires_grad=False

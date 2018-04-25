@@ -6,6 +6,8 @@ import argparse
 from torch.autograd import Variable
 import torch.nn.functional as F
 import copy
+from torch.optim.lr_scheduler import StepLR
+
 
 '''
 Fine-tune on LIVE/TID2013 dataset
@@ -23,8 +25,8 @@ parser.add_argument('--dataset', type=str, default='live',
                     help='[live]live or tid2013 for fine-tuning')
 parser.add_argument('--load_model', type=str, default='./model/cuda_True_epoch_550',
                     help='model path to fine-tune from')
-parser.add_argument('--epochs', type=int, default=5000,
-                    help='[5000]total epochs of training')
+parser.add_argument('--epochs', type=int, default=200,
+                    help='[200]total epochs of training')
 parser.add_argument('--batch_size', type=int, default=32,
                     help='[32]batch_size')
 parser.add_argument('--num_workers', type=int, default=4,
@@ -45,8 +47,8 @@ parser.add_argument('--epoch_reload', type=int, default=0,
                     help='[0]epoch when reloaded model finished')
 parser.add_argument('--model_save', type=str, default='',
                     help='['']model saving path')
-parser.add_argument('--model_epoch', type=int, default=1000,
-                    help='[1000]epochs for saving the best model')
+parser.add_argument('--model_epoch', type=int, default=100,
+                    help='[100]epochs for saving the best model')
 parser.add_argument('--mode', type=str, default='ft',
                     help='[ft]ft:ft on deepnet, ft12, ft2')
 args = parser.parse_args()
@@ -103,11 +105,26 @@ if save_model:
     best_model = {'model': None,
                   'epoch': -1,
                   'loss': -1,
-                  'lcc': -1,
-                  'srocc': -1,
+                  'lcc': 0.95,
+                  'srocc': 0.95,
                   'new': False}
 
-optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))
+if mode == 'ft12':
+    optimizer = torch.optim.Adam([
+        {'params': model.features.parameters()},
+        {'params': model.classifiers.parameters()},
+        {'params': model.logistic.parameters(), 'lr': 5e4*lr}
+    ], lr=lr, betas=(0.9, 0.99))
+elif mode == 'ft2':
+    optimizer = torch.optim.Adam([
+        {'params': model.classifiers.parameters(),},
+        {'params': model.logistic.parameters(), 'lr': 5e4*lr}
+    ], lr=lr, betas=(0.9, 0.99))
+else:
+    optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))
+
+# for one iter
+scheduler = StepLR(optimizer, step_size=25, gamma=0.7)
 
 live_dataset = tools.get_live_dataset(live_train=live_train,
                                       live_test=live_test)
@@ -119,24 +136,31 @@ data_loader = tools.get_dataloader(live_dataset,
 
 def train(epoch=1):
     model.train()
+    patches_per_image = 30
 
-    for batch_idx, sample_batched in enumerate(data_loader):
-        image = sample_batched['image']
-        score = sample_batched['score']
+    # for one image, sample 30 times
+    for i in range(patches_per_image):
+        for batch_idx, sample_batched in enumerate(data_loader):
+            image = sample_batched['image']
+            score = sample_batched['score']
 
-        if cuda:
-            image, score = image.cuda(), score.cuda()
-        image, score = Variable(image), Variable(score)
+            if cuda:
+                image, score = image.cuda(), score.cuda()
+            image, score = Variable(image), Variable(score)
 
-        optimizer.zero_grad()
-        output = model(image)
-        if train_loss == 'mse':
-            loss = F.mse_loss(output, score)
-        elif train_loss == 'mae':
-            loss = F.l1_loss(output, score)
-        else: exit(0)
-        loss.backward()
-        optimizer.step()
+            optimizer.zero_grad()
+            output = model(image)
+            if train_loss == 'mse':
+                loss = F.mse_loss(output, score)
+            elif train_loss == 'mae':
+                loss = F.l1_loss(output, score)
+            else: exit(0)
+            loss.backward()
+            optimizer.step()
+
+            # debug
+            if str(loss) == 'nan':
+                print(output.size())
 
     tools.log_print('Epoch_{} Loss: {:.2f}'.format(
         epoch, loss.data[0]))
@@ -221,6 +245,7 @@ if write_data:
 
 for i in range(epochs):
     epoch = i + 1 + epoch_reload
+    scheduler.step()
 
     test(epoch)
     train(epoch)

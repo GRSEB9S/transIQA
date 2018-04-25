@@ -3,6 +3,7 @@ import math
 import torch.nn.functional as F
 import torch
 import numpy as np
+from collections import OrderedDict
 
 
 class Net_deep(nn.Module):
@@ -99,9 +100,8 @@ class Net_deep(nn.Module):
         self.classifiers = nn.Sequential(
             nn.Linear(512, 512),
             nn.Dropout(p=0.5, inplace=True),
-            # nn.Linear(512, 1)
+            nn.Linear(512, 1)
         )
-        self.classifiers.add_module('fc2', nn.Linear(512, 1))
 
         for m in self.features.children():
             if isinstance(m, nn.Conv2d):
@@ -124,9 +124,9 @@ class Logistic(nn.Module):
 
     def __init__(self):
         super(Logistic, self).__init__()
-        self.x0 = nn.Parameter(torch.from_numpy(np.array([1.])))
-        self.k = nn.Parameter(torch.from_numpy(np.array([2.])))
-        self.L = nn.Parameter(torch.from_numpy(np.array([3.])))
+        self.x0 = nn.Parameter(torch.from_numpy(np.array([0.2], dtype=np.float32)))
+        self.k = nn.Parameter(torch.from_numpy(np.array([0.2], dtype=np.float32)))
+        self.L = nn.Parameter(torch.from_numpy(np.array([0.2], dtype=np.float32)))
 
     def forward(self, x):
         x0 = self.x0.expand_as(x)
@@ -267,9 +267,9 @@ def ft12(model):
     :return:
     """
 
-    model.classifiers.fc2 = nn.Linear(512, 512)
+    model.classifiers._modules['2'] = nn.Linear(512, 512)
     model.classifiers.add_module('fc3', nn.Linear(512, 1))
-    model.classifiers.add_module('logistic', Logistic())
+    model.add_module('logistic', Logistic())
 
     return model
 
@@ -283,7 +283,7 @@ def ft2(model):
     :return:
     """
 
-    model = f12(model)
+    model = ft12(model)
     for param in model.features.parameters():
         param.requires_grad = False
 

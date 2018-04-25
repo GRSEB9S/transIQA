@@ -197,6 +197,9 @@ def evaluate_on_metric(hypo, score, log=True):
     lcc = stats.pearsonr(hypo, score)[0]
     srocc = stats.spearmanr(hypo, score)[0]
 
+    if str(lcc) == 'nan' or str(srocc) == 'nan':
+        print(hypo, score)
+
     if log:
         log_print('LCC:{:.6f}'.format(lcc))
         log_print('SROCC:{:.6f}'.format(srocc))
