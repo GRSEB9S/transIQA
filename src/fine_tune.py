@@ -25,7 +25,7 @@ parser.add_argument('--dataset', type=str, default='live',
                     help='[live]live or tid2013 for fine-tuning')
 parser.add_argument('--load_model', type=str, default='./model/cuda_True_epoch_550',
                     help='model path to fine-tune from')
-parser.add_argument('--epochs', type=int, default=200,
+parser.add_argument('--epochs', type=int, default=500,
                     help='[200]total epochs of training')
 parser.add_argument('--batch_size', type=int, default=32,
                     help='[32]batch_size')
@@ -113,12 +113,12 @@ if mode == 'ft12':
     optimizer = torch.optim.Adam([
         {'params': model.features.parameters()},
         {'params': model.classifiers.parameters()},
-        {'params': model.logistic.parameters(), 'lr': 5e4*lr}
+        {'params': model.logistic.parameters(), 'lr': 6e4*lr}
     ], lr=lr, betas=(0.9, 0.99))
 elif mode == 'ft2':
     optimizer = torch.optim.Adam([
         {'params': model.classifiers.parameters(),},
-        {'params': model.logistic.parameters(), 'lr': 5e4*lr}
+        {'params': model.logistic.parameters(), 'lr': 6e4*lr}
     ], lr=lr, betas=(0.9, 0.99))
 else:
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))

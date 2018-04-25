@@ -8,20 +8,45 @@ Dlib 19.10 (for human face detection)
 <br>Scipy (scipy.stats for srocc & lcc evaluation)
 
 #### Change log:
-**Next Version(0.19)**
+**Next Version(0.20)**
+1. **Experiment Outcome**
+    * Good result
+    * Compare results
 1. **New model**
     * Architecture
-1. **Algorithm convergence**
-    * Learning rate decay
-    * and so on
+    * More papers
+    * Think deep, think wide
+1. **Dataset**
+    * KonIQ-10k
 1. **Code**
     * Usability
-        * Model restore
     * Redundance 
     * Reuse
     * Robustness
     * Readable
     * and so on
+
+**Version_0.19(25/04/18)**
+1. **Model**
+    * Define new module: logistic
+        * Definition
+        * _LR_ setting
+        * Name children module
+        * Change children module
+    * _f1 + f2_ structure for train and fine-tune
+1. **Algorithm trick**
+    * Restore model and continue
+    * Save best model by steps
+    * Test _eval()_ and train mode on model
+    * _LR_
+        * Different _lr_ on on model
+        * Step _lr_
+    * Train with bash shell
+1. **Dataset**
+    * LIVE
+        * Rename and generate train/test list
+    * TID2013
+        * Generate train/test list
 
 **Version_0.18(18/04/18)**
 1. **Model**
