@@ -2,6 +2,7 @@ import torch.nn as nn
 import math
 import torch.nn.functional as F
 import torch
+import numpy as np
 
 
 class Net_deep(nn.Module):
@@ -98,8 +99,9 @@ class Net_deep(nn.Module):
         self.classifiers = nn.Sequential(
             nn.Linear(512, 512),
             nn.Dropout(p=0.5, inplace=True),
-            nn.Linear(512, 1)
+            # nn.Linear(512, 1)
         )
+        self.classifiers.add_module('fc2', nn.Linear(512, 1))
 
         for m in self.features.children():
             if isinstance(m, nn.Conv2d):
@@ -116,6 +118,22 @@ class Net_deep(nn.Module):
         x = self.classifiers(x)
 
         return x
+
+
+class Logistic(nn.Module):
+
+    def __init__(self):
+        super(Logistic, self).__init__()
+        self.x0 = nn.Parameter(torch.from_numpy(np.array([1.])))
+        self.k = nn.Parameter(torch.from_numpy(np.array([2.])))
+        self.L = nn.Parameter(torch.from_numpy(np.array([3.])))
+
+    def forward(self, x):
+        x0 = self.x0.expand_as(x)
+        k = self.k.expand_as(x)
+        L = self.L.expand_as(x)
+        return L / (1. + torch.exp((-k) * (x - x0)))
+
 
 class Net_2x(nn.Module):
     """
@@ -179,6 +197,7 @@ class Net_2x(nn.Module):
 
         return x
 
+
 class Net_init(nn.Module):
     """
     Input: 32*32*3
@@ -237,3 +256,35 @@ class Net_init(nn.Module):
         x = self.classifiers(x)
 
         return x
+
+
+def ft12(model):
+    """
+    input Net_deep and
+    add fc3 + logistic to classifiers
+    all the params requires grad
+    :param model:
+    :return:
+    """
+
+    model.classifiers.fc2 = nn.Linear(512, 512)
+    model.classifiers.add_module('fc3', nn.Linear(512, 1))
+    model.classifiers.add_module('logistic', Logistic())
+
+    return model
+
+
+def ft2(model):
+    """
+    input Net_deep and output model
+    add classifiers with fc3 and logistic
+    only backward on classifiers
+    :param model:
+    :return:
+    """
+
+    model = f12(model)
+    for param in model.features.parameters():
+        param.requires_grad = False
+
+    return model

@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from model import Net_deep
+from model import Net_deep, ft12, ft2
 import tools
 import argparse
 from torch.autograd import Variable
@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import copy
 
 '''
-Fine-tune on LIVE dataset
+Fine-tune on LIVE/TID2013 dataset
 
 Refer main.py
 1. load_model
@@ -17,14 +17,18 @@ Refer main.py
 4. test
 '''
 
-parser = argparse.ArgumentParser(description='fine-tune exist model on LIVE.')
+parser = argparse.ArgumentParser(description='fine-tune exist model on LIVE/TID2013.')
 
-parser.add_argument('--limited', action='store_true',
-                    help='run with 8G memory pc')
+parser.add_argument('--dataset', type=str, default='live',
+                    help='[live]live or tid2013 for fine-tuning')
 parser.add_argument('--load_model', type=str, default='./model/cuda_True_epoch_550',
                     help='model path to fine-tune from')
 parser.add_argument('--epochs', type=int, default=5000,
                     help='[5000]total epochs of training')
+parser.add_argument('--batch_size', type=int, default=32,
+                    help='[32]batch_size')
+parser.add_argument('--num_workers', type=int, default=4,
+                    help='[4]num_workers for iterating traning dataset')
 parser.add_argument('--lr', type=float, default=1e-5,
                     help='[1e-5] learning rate')
 parser.add_argument('--optimizer', type=str, default='adam',
@@ -43,10 +47,14 @@ parser.add_argument('--model_save', type=str, default='',
                     help='['']model saving path')
 parser.add_argument('--model_epoch', type=int, default=1000,
                     help='[1000]epochs for saving the best model')
+parser.add_argument('--mode', type=str, default='ft',
+                    help='[ft]ft:ft on deepnet, ft12, ft2')
 args = parser.parse_args()
 
-
+dataset = args.dataset
 epochs = args.epochs
+batch_size = args.batch_size
+num_workers = args.num_workers
 optimizer = args.optimizer
 lr = args.lr
 train_loss = args.train_loss
@@ -56,6 +64,7 @@ model_reload = args.model_reload
 epoch_reload = args.epoch_reload
 model_save = args.model_save
 model_epoch = args.model_epoch
+mode = args.mode
 write_data = True if data_log != '' \
     else False
 reload = True if model_reload != '' and epoch_reload != 0 \
@@ -65,15 +74,29 @@ model_path = args.load_model if not reload \
 save_model = True if model_save != '' \
     else False
 
-batch_size = 32
-num_workers = 4
 cuda = torch.cuda.is_available()
-live_train = './data/live_generator/ft_live_train.txt'
-live_test = './data/live_generator/ft_live_test.txt'
+
+if dataset == 'tid2013':
+    live_train = './data/tid2013_generator/ft_tid2013_train.txt'
+    live_test = './data/tid2013_generator/ft_tid2013_test.txt'
+else:
+    live_train = './data/live_generator/ft_live_train.txt'
+    live_test = './data/live_generator/ft_live_test.txt'
 
 # if model_path == '', train from scratch
-model = torch.load(model_path) if model_path != '' \
-    else Net_deep()
+if model_path != '':
+    model = torch.load(model_path)
+    if mode == 'ft12':
+        model = ft12(model)
+    elif mode == 'ft2':
+        model = ft2(model)
+else:
+    model = Net_deep()
+    if mode == 'ft12':
+        model = ft12(model)
+    elif mode == 'ft2':
+        model = ft2(model)
+
 if cuda:
     model.cuda()
 if save_model:
@@ -202,7 +225,7 @@ for i in range(epochs):
     test(epoch)
     train(epoch)
 
-    if i % model_epoch == 0 and best_model['new'] == True:
+    if save_model and i % model_epoch == 0 and best_model['new'] == True:
         path = model_save + '_{}_{:.4f}_{:.4f}'.format(
             best_model['epoch'], best_model['lcc'], best_model['srocc'])
         tools.log_print('Saving model:{}'.format(path))
