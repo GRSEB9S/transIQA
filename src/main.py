@@ -48,6 +48,7 @@ args = parser.parse_args()
 
 cuda = ~args.no_cuda and torch.cuda.is_available()
 device = torch.device("cuda:0" if cuda else "cpu")
+dtype = torch.float
 log_interval = args.log_interval
 epochs = args.epochs # for 5W images, each images 30 patches, each patch 10 times
 lr = args.lr
@@ -79,7 +80,7 @@ if reload:
     model = torch.load(reload_model)
 else:
     model = Net_deep()
-model.to(device)
+model.to(device=device, dtype=dtype)
 
 if args.optimizer == 'adam':
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))
@@ -89,7 +90,6 @@ else: exit(0)
 
 
 def train(epoch=1, limited=True):
-    model.train()
 
     num_split = int(50000 / num_faces)
     patch_per_face = 30
@@ -100,6 +100,7 @@ def train(epoch=1, limited=True):
 
     # for one train, five dataloader
     for i in range(num_split):
+        model.train()
         face_dataset = tools.get_dataset(limited=True, image_list = txt_input)
 
         # one dataset, get 30 dataloader
@@ -109,8 +110,8 @@ def train(epoch=1, limited=True):
                                               shuffle=True,
                                               num_workers=num_workers)
             for batch_idx, sample_batched in enumerate(dataloader):
-                image = sample_batched['image'].to(device)
-                score = sample_batched['score'].to(device)
+                image = sample_batched['image'].to(device=device, dtype=dtype)
+                score = sample_batched['score'].to(device=device, dtype=dtype)
 
                 #debug
                 debug = False
@@ -135,18 +136,19 @@ def train(epoch=1, limited=True):
                     with open(data_log, 'a') as f:
 
                         lcc, srocc = tools.evaluate_on_metric(output, score, log=False)
-                        line= 'train epoch:{} percent:{:.6f} loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'.format(epoch,
-                                                                                                           num_patches/num_total_patch,
-                                                                                                           loss.detach()[0],
-                                                                                                           lcc,
-                                                                                                           srocc)
+                        line= 'train epoch:{} percent:{:.6f} loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'
+                        line.format(epoch,
+                                    num_patches/num_total_patch,
+                                    loss.detach(),
+                                    lcc,
+                                    srocc)
                         f.write(line)
                         data_log_time += 1
 
                 if num_patches % log_patch == 0:
                     tools.log_print('Epoch_{} Split_{} [{}/{} ({:.0f}%)]\tLoss: {:.2f}'.format(
                         epoch, i+1, num_patches, num_total_patch,
-                                100. * num_patches / num_total_patch, loss.detach()[0]))
+                                100. * num_patches / num_total_patch, loss.detach()))
                     tools.evaluate_on_metric(output, score)
 
         # restore memory for next
@@ -178,7 +180,7 @@ def test(limited=True):
         width = image.shape[1]
 
         patches = []
-        for i in range(30): # num of small patch
+        for j in range(30): # num of small patch
             top = np.random.randint(0, height - 32)
             left = np.random.randint(0, width - 32)
             patches.append(image[top:top+32, left:left+32, :].transpose((2, 0, 1)))
@@ -189,9 +191,9 @@ def test(limited=True):
         if debug:
             print(patches)
             print(patches.shape)
-        patches = torch.from_numpy(patches).to(device)
+        patches = torch.from_numpy(patches).to(device=device, dtype=dtype)
 
-        output = model(patches).detach()[0]
+        output = model(patches).detach()
         output = sum(output) / 30
         outputs.append(output)
 
@@ -233,7 +235,8 @@ def main():
         train(epoch=epoch, limited=limited)
 
         if epoch % model_epoch == 0:
-            tools.save_model(model=model, model_name='cuda_' + str(cuda), epoch=epoch)
+            tools.save_model(model=model.to(torch.device("cpu")),
+                             model_name='cuda_' + str(cuda), epoch=epoch)
 
 
 def test_model():
@@ -246,9 +249,7 @@ def test_model():
         model_path = model_root + model_name
 
         tools.log_print('loading model:{}'.format(model_path))
-        model = torch.load(model_path)
-        if cuda:
-            model.cuda()
+        model = torch.load(model_path).to(device)
 
         test(model=model, limited=limited)
 

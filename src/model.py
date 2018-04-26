@@ -148,8 +148,8 @@ def ft12(model):
     """
 
     model.classifiers._modules['2'] = nn.Linear(512, 512)
-    model.classifiers.add_module('fc3', nn.Linear(512, 1))
     model.classifiers.add_module('dropout', nn.Dropout(p=0.5, inplace=True))
+    model.classifiers.add_module('fc3', nn.Linear(512, 1))
     model.add_module('logistic', Logistic())
 
     return model

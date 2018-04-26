@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import tools
 import cv2
-import multiprocessing as mtp
 
 class RandomCrop(object):
     """Crop randomly the image in a sample.

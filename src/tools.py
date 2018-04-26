@@ -4,11 +4,11 @@ import numpy as np
 import torch
 from torchvision import transforms
 from torch.utils.data import DataLoader
-from torch.autograd import Variable
 import dataset
 from scipy import stats
 import time
 import os.path as osp
+from torch import Tensor
 
 start = time.time()
 
@@ -183,10 +183,10 @@ def evaluate_on_metric(hypo, score, log=True):
     if type(hypo) == list:
         hypo = np.array(hypo).reshape([-1])
 
-    if type(hypo) == Variable:
-        hypo = hypo.data.cpu().numpy().reshape([-1])
-    if type(score) == Variable:
-        score = score.data.cpu().numpy().reshape([-1])
+    if type(hypo) == Tensor:
+        hypo = hypo.detach().numpy().reshape([-1])
+    if type(score) == Tensor:
+        score = score.detach().numpy().reshape([-1])
 
     # debug: make sure data formats
     debug=0

@@ -3,7 +3,6 @@ import numpy as np
 from model import Net_deep, ft12, ft2
 import tools
 import argparse
-from torch.autograd import Variable
 import torch.nn.functional as F
 import copy
 from torch.optim.lr_scheduler import StepLR
@@ -77,6 +76,8 @@ save_model = True if model_save != '' \
     else False
 
 cuda = torch.cuda.is_available()
+device = torch.device("cuda:0" if cuda else "cpu")
+dtype = torch.float
 
 if dataset == 'tid2013':
     live_train = './data/tid2013_generator/ft_tid2013_train.txt'
@@ -99,8 +100,7 @@ else:
     elif mode == 'ft2':
         model = ft2(model)
 
-if cuda:
-    model.cuda()
+model.to(device=device, dtype=dtype)
 if save_model:
     best_model = {'model': None,
                   'epoch': -1,
@@ -141,12 +141,8 @@ def train(epoch=1):
     # for one image, sample 30 times
     for i in range(patches_per_image):
         for batch_idx, sample_batched in enumerate(data_loader):
-            image = sample_batched['image']
-            score = sample_batched['score']
-
-            if cuda:
-                image, score = image.cuda(), score.cuda()
-            image, score = Variable(image), Variable(score)
+            image = sample_batched['image'].to(device=device, dtype=dtype)
+            score = sample_batched['score'].to(device=device, dtype=dtype)
 
             optimizer.zero_grad()
             output = model(image)
@@ -163,7 +159,7 @@ def train(epoch=1):
                 print(output.size())
 
     tools.log_print('Epoch_{} Loss: {:.2f}'.format(
-        epoch, loss.data[0]))
+        epoch, loss.detach()))
     lcc, srocc = tools.evaluate_on_metric(output, score)
 
     if write_data:
@@ -172,7 +168,7 @@ def train(epoch=1):
             line = 'train epoch:{} percent:{:.6f} loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'
             line = line.format(epoch,
                                0.,
-                               loss.data[0],
+                               loss.detach(),
                                lcc,
                                srocc)
             f.write(line)
@@ -203,13 +199,9 @@ def test(epoch):
         if debug:
             print(patches)
             print(patches.shape)
-        patches = torch.from_numpy(patches)
+        patches = torch.from_numpy(patches).to(device)
 
-        if cuda:
-            patches = patches.cuda()
-        patches = Variable(patches)
-
-        output = model(patches).data
+        output = model(patches).detach()
         output = sum(output) / 30
         outputs.append(output)
 
@@ -228,7 +220,7 @@ def test(epoch):
     if save_model and srocc > best_model['srocc'] and lcc > best_model['lcc']:
         best_model['model'] = copy.deepcopy(model)
         best_model['epoch'] = epoch
-        best_model['loss'] = loss.data[0]
+        best_model['loss'] = loss.detach()
         best_model['lcc'] = lcc
         best_model['srocc'] = srocc
         # update 'new' buffer
@@ -254,6 +246,7 @@ for i in range(epochs):
         path = model_save + '_{}_{:.4f}_{:.4f}'.format(
             best_model['epoch'], best_model['lcc'], best_model['srocc'])
         tools.log_print('Saving model:{}'.format(path))
-        torch.save(best_model['model'], path)
+        torch.save(best_model['model'].to(torch.device("cpu")),
+                   path)
         # close buffer
         best_model['new'] = False
