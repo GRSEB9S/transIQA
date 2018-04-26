@@ -5,7 +5,6 @@ import argparse
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.autograd import Variable
 import gc
 import numpy as np
 
@@ -48,6 +47,7 @@ parser.add_argument('--reload_epoch', type=int, default=0,
 args = parser.parse_args()
 
 cuda = ~args.no_cuda and torch.cuda.is_available()
+device = torch.device("cuda:0" if cuda else "cpu")
 log_interval = args.log_interval
 epochs = args.epochs # for 5W images, each images 30 patches, each patch 10 times
 lr = args.lr
@@ -79,19 +79,17 @@ if reload:
     model = torch.load(reload_model)
 else:
     model = Net_deep()
-if cuda:
-    model.cuda()
+model.to(device)
 
 if args.optimizer == 'adam':
     optimizer = optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))
 elif args.optimizer == 'sgd':
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.8)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.8)
 else: exit(0)
 
 
-def train(model, epoch=1, limited=True):
-    model_train = model
-    model_train.train()
+def train(epoch=1, limited=True):
+    model.train()
 
     num_split = int(50000 / num_faces)
     patch_per_face = 30
@@ -111,11 +109,8 @@ def train(model, epoch=1, limited=True):
                                               shuffle=True,
                                               num_workers=num_workers)
             for batch_idx, sample_batched in enumerate(dataloader):
-                image = sample_batched['image']
-                score = sample_batched['score']
-                if cuda:
-                    image, score = image.cuda(), score.cuda()
-                image, score = Variable(image), Variable(score)
+                image = sample_batched['image'].to(device)
+                score = sample_batched['score'].to(device)
 
                 #debug
                 debug = False
@@ -126,7 +121,7 @@ def train(model, epoch=1, limited=True):
                    exit(0)
 
                 optimizer.zero_grad()
-                output = model_train(image)
+                output = model(image)
                 if train_loss == 'mse':
                     loss = F.mse_loss(output, score)
                 elif train_loss == 'mae':
@@ -142,7 +137,7 @@ def train(model, epoch=1, limited=True):
                         lcc, srocc = tools.evaluate_on_metric(output, score, log=False)
                         line= 'train epoch:{} percent:{:.6f} loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'.format(epoch,
                                                                                                            num_patches/num_total_patch,
-                                                                                                           loss.data[0],
+                                                                                                           loss.detach()[0],
                                                                                                            lcc,
                                                                                                            srocc)
                         f.write(line)
@@ -151,7 +146,7 @@ def train(model, epoch=1, limited=True):
                 if num_patches % log_patch == 0:
                     tools.log_print('Epoch_{} Split_{} [{}/{} ({:.0f}%)]\tLoss: {:.2f}'.format(
                         epoch, i+1, num_patches, num_total_patch,
-                                100. * num_patches / num_total_patch, loss.data[0]))
+                                100. * num_patches / num_total_patch, loss.detach()[0]))
                     tools.evaluate_on_metric(output, score)
 
         # restore memory for next
@@ -161,9 +156,8 @@ def train(model, epoch=1, limited=True):
         test(limited=limited)
 
 
-def test(model, limited=True):
-    model_test = model
-    model_test.eval()
+def test(limited=True):
+    model.eval()
 
     face_dataset = tools.get_dataset(limited=limited, train=False, image_list=txt_input)
 
@@ -195,13 +189,9 @@ def test(model, limited=True):
         if debug:
             print(patches)
             print(patches.shape)
-        patches = torch.from_numpy(patches)
+        patches = torch.from_numpy(patches).to(device)
 
-        if cuda:
-            patches = patches.cuda()
-        patches = Variable(patches)
-
-        output = model_test(patches).data
+        output = model(patches).detach()[0]
         output = sum(output) / 30
         outputs.append(output)
 
@@ -240,7 +230,7 @@ def main():
         #    tools.log_print('Testing')
         #    test(limited=limited)
 
-        train(epoch, limited=limited)
+        train(epoch=epoch, limited=limited)
 
         if epoch % model_epoch == 0:
             tools.save_model(model=model, model_name='cuda_' + str(cuda), epoch=epoch)
@@ -262,5 +252,5 @@ def test_model():
 
         test(model=model, limited=limited)
 
-
+main()
 # test_model()
