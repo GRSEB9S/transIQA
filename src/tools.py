@@ -118,8 +118,6 @@ def prepare_faces(scale = 1.2):
 
         print('%d in %d'%(i, len(pristine_images)))
 
-
-
     with open('../dataset/transIQA' + '/' + output_file, 'w') as f:
         for i in range(len(faces)):
             f.write(faces[i] + ' ' +str(face_scores[i]) + '\n')
@@ -184,9 +182,9 @@ def evaluate_on_metric(hypo, score, log=True):
         hypo = np.array(hypo).reshape([-1])
 
     if type(hypo) == Tensor:
-        hypo = hypo.detach().numpy().reshape([-1])
+        hypo = hypo.detach().cpu().numpy().reshape([-1])
     if type(score) == Tensor:
-        score = score.detach().numpy().reshape([-1])
+        score = score.detach().cpu().numpy().reshape([-1])
 
     # debug: make sure data formats
     debug=0

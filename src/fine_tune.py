@@ -30,7 +30,7 @@ parser.add_argument('--batch_size', type=int, default=32,
                     help='[32]batch_size')
 parser.add_argument('--num_workers', type=int, default=4,
                     help='[4]num_workers for iterating traning dataset')
-parser.add_argument('--lr', type=float, default=1e-5,
+parser.add_argument('--lr', type=float, default=4e-6,
                     help='[1e-5] learning rate')
 parser.add_argument('--optimizer', type=str, default='adam',
                     help='[adam] optimizer type')
@@ -105,8 +105,8 @@ if save_model:
     best_model = {'model': None,
                   'epoch': -1,
                   'loss': -1,
-                  'lcc': 0.95,
-                  'srocc': 0.95,
+                  'lcc': 0.5,
+                  'srocc': 0.5,
                   'new': False}
 
 if mode == 'ft12':
@@ -220,7 +220,7 @@ def test(epoch):
     if save_model and srocc > best_model['srocc'] and lcc > best_model['lcc']:
         best_model['model'] = copy.deepcopy(model)
         best_model['epoch'] = epoch
-        best_model['loss'] = loss.detach()
+        best_model['loss'] = loss
         best_model['lcc'] = lcc
         best_model['srocc'] = srocc
         # update 'new' buffer
@@ -242,7 +242,7 @@ for i in range(epochs):
     test(epoch)
     train(epoch)
 
-    if save_model and i % model_epoch == 0 and best_model['new'] == True:
+    if save_model and (i+1) % model_epoch == 0 and best_model['new'] == True:
         path = model_save + '_{}_{:.4f}_{:.4f}'.format(
             best_model['epoch'], best_model['lcc'], best_model['srocc'])
         tools.log_print('Saving model:{}'.format(path))

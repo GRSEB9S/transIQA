@@ -7,6 +7,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 import gc
 import numpy as np
+from torch.optim.lr_scheduler import StepLR
+import copy
 
 parser = argparse.ArgumentParser(description='TransIQA')
 
@@ -68,6 +70,8 @@ reload = True if reload_model != '' and reload_epoch != 0 \
 train_loss = args.train_loss
 test_loss = args.test_loss
 
+save_model = True if model_epoch != 0 \
+    else False
 
 if limited:
     num_faces = 2000 #7G ROM for 10000 28*28*3 numpy array
@@ -87,6 +91,17 @@ if args.optimizer == 'adam':
 elif args.optimizer == 'sgd':
     optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.8)
 else: exit(0)
+
+# for one iter
+scheduler = StepLR(optimizer, step_size=25, gamma=0.7)
+
+if save_model:
+    best_model = {'model': None,
+                  'epoch': -1,
+                  'loss': -1,
+                  'lcc': 0.5,
+                  'srocc': 0.5,
+                  'new': False}
 
 
 def train(epoch=1, limited=True):
@@ -137,11 +152,11 @@ def train(epoch=1, limited=True):
 
                         lcc, srocc = tools.evaluate_on_metric(output, score, log=False)
                         line= 'train epoch:{} percent:{:.6f} loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'
-                        line.format(epoch,
-                                    num_patches/num_total_patch,
-                                    loss.detach(),
-                                    lcc,
-                                    srocc)
+                        line = line.format(epoch,
+                                           num_patches/num_total_patch,
+                                           loss.detach(),
+                                           lcc,
+                                           srocc)
                         f.write(line)
                         data_log_time += 1
 
@@ -155,10 +170,10 @@ def train(epoch=1, limited=True):
         del face_dataset.images
         gc.collect()
 
-        test(limited=limited)
+        test(epoch=epoch, limited=limited)
 
 
-def test(limited=True):
+def test(epoch, limited=True):
     model.eval()
 
     face_dataset = tools.get_dataset(limited=limited, train=False, image_list=txt_input)
@@ -207,6 +222,16 @@ def test(limited=True):
         with open(data_log, 'a') as f:
             f.write('test loss:{:.4f} lcc:{:.4f} srocc:{:.4f}\n'.format(loss, lcc, srocc))
 
+    # save best model
+    if save_model and srocc > best_model['srocc'] and lcc > best_model['lcc']:
+        best_model['model'] = copy.deepcopy(model)
+        best_model['epoch'] = epoch
+        best_model['loss'] = loss
+        best_model['lcc'] = lcc
+        best_model['srocc'] = srocc
+        # update 'new' buffer
+        best_model['new'] = True
+
     del face_dataset.images
     gc.collect()
 
@@ -221,8 +246,10 @@ def main():
             f.write(str(args) + '\n')
             f.write(str(model) + '\n')
 
-    test(limited=limited)
+    # test(limited=limited)
     for epoch in range(1, epochs+1):
+
+        scheduler.step()
 
         if reload:
             epoch += reload_epoch
@@ -234,9 +261,19 @@ def main():
 
         train(epoch=epoch, limited=limited)
 
-        if epoch % model_epoch == 0:
-            tools.save_model(model=model.to(torch.device("cpu")),
-                             model_name='cuda_' + str(cuda), epoch=epoch)
+        # if epoch % model_epoch == 0:
+        #    tools.save_model(model=model.to(torch.device("cpu")),
+        #                     model_name='cuda_' + str(cuda), epoch=epoch)
+
+        model_save = './model/scratch/face'
+        if save_model and epoch % model_epoch == 0 and best_model['new'] == True:
+            path = model_save + '_{}_{:.4f}_{:.4f}'.format(
+                best_model['epoch'], best_model['lcc'], best_model['srocc'])
+            tools.log_print('Saving model:{}'.format(path))
+            torch.save(best_model['model'].to(torch.device("cpu")),
+                       path)
+            # close buffer
+            best_model['new'] = False
 
 
 def test_model():
