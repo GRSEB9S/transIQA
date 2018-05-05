@@ -21,6 +21,8 @@ parser.add_argument('--log_interval', type=int, default=50,
                     help='[50]percentage of one epoch for loss output')
 parser.add_argument('--lr', type=float, default=1e-4,
                     help='[1e-4]learning rate')
+parser.add_argument('--step_size', type=int, default=50,
+                    help='[50]step size of step lr scheduler')
 parser.add_argument('--txt_input', type=str, default='./data/face_score_generated_dlib.txt',
                     help='[./data/face_score_generated_dlib.txt]input image path for training and validation')
 parser.add_argument('--batch_size', type=int, default=64,
@@ -93,7 +95,7 @@ elif args.optimizer == 'sgd':
 else: exit(0)
 
 # for one iter
-scheduler = StepLR(optimizer, step_size=25, gamma=0.7)
+scheduler = StepLR(optimizer, step_size=50, gamma=0.7)
 
 if save_model:
     best_model = {'model': None,
@@ -276,19 +278,18 @@ def main():
             best_model['new'] = False
 
 
-def test_model():
+main()
 
-    model_root = './model/'
+# test model
+if False:
 
-    for i in range(11):
-        num = i * 50 + 150
-        model_name = 'cuda_True_epoch_' + str(num)
+    model_root = './model/scratch/'
+
+    import os
+    for model_name in os.listdir(model_root):
         model_path = model_root + model_name
 
         tools.log_print('loading model:{}'.format(model_path))
         model = torch.load(model_path).to(device)
 
-        test(model=model, limited=limited)
-
-main()
-# test_model()
+        test(epoch=-1, limited=limited)

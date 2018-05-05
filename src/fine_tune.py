@@ -31,7 +31,7 @@ parser.add_argument('--batch_size', type=int, default=32,
 parser.add_argument('--num_workers', type=int, default=4,
                     help='[4]num_workers for iterating traning dataset')
 parser.add_argument('--lr', type=float, default=4e-6,
-                    help='[1e-5] learning rate')
+                    help='[4e-6] learning rate')
 parser.add_argument('--optimizer', type=str, default='adam',
                     help='[adam] optimizer type')
 parser.add_argument('--train_loss', type=str, default='mae',
@@ -50,6 +50,8 @@ parser.add_argument('--model_epoch', type=int, default=100,
                     help='[100]epochs for saving the best model')
 parser.add_argument('--mode', type=str, default='ft',
                     help='[ft]ft:ft on deepnet, ft12, ft2')
+parser.add_argument('--num_patch', type=int, default=30,
+                    help='[30]for test, patch numbers')
 args = parser.parse_args()
 
 dataset = args.dataset
@@ -66,6 +68,7 @@ epoch_reload = args.epoch_reload
 model_save = args.model_save
 model_epoch = args.model_epoch
 mode = args.mode
+num_patch = args.num_patch
 write_data = True if data_log != '' \
     else False
 reload = True if model_reload != '' and epoch_reload != 0 \
@@ -113,18 +116,18 @@ if mode == 'ft12':
     optimizer = torch.optim.Adam([
         {'params': model.features.parameters()},
         {'params': model.classifiers.parameters()},
-        {'params': model.logistic.parameters(), 'lr': 6e4*lr}
+        {'params': model.logistic.parameters(), 'lr': 1e5*lr}
     ], lr=lr, betas=(0.9, 0.99))
 elif mode == 'ft2':
     optimizer = torch.optim.Adam([
         {'params': model.classifiers.parameters(),},
-        {'params': model.logistic.parameters(), 'lr': 6e4*lr}
+        {'params': model.logistic.parameters(), 'lr': 1e5*lr}
     ], lr=lr, betas=(0.9, 0.99))
 else:
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=(0.9, 0.99))
 
 # for one iter
-scheduler = StepLR(optimizer, step_size=25, gamma=0.7)
+scheduler = StepLR(optimizer, step_size=100, gamma=0.7)
 
 live_dataset = tools.get_live_dataset(live_train=live_train,
                                       live_test=live_test)
@@ -188,7 +191,7 @@ def test(epoch):
         width = image.shape[1]
 
         patches = []
-        for i in range(30): # num of small patch
+        for i in range(num_patch): # num of small patch
             top = np.random.randint(0, height - 32)
             left = np.random.randint(0, width - 32)
             patches.append(image[top:top+32, left:left+32, :].transpose((2, 0, 1)))
@@ -202,7 +205,7 @@ def test(epoch):
         patches = torch.from_numpy(patches).to(device)
 
         output = model(patches).detach()
-        output = sum(output) / 30
+        output = sum(output) / num_patch
         outputs.append(output)
 
     if test_loss == 'mse':
