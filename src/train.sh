@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
 # LIVE ft with mse
-# python ./src/fine_tune.py --mode ft --load_model ./model/scratch/cuda_True_epoch_550\
-#  --model_save ./model/ft/live_mse --data_log ./log/ft/live_180_mse.txt\
-#  --train_loss mse --test_loss mse\
-#  --lr 1e-6\
-#  2>&1 | tee ./log/ft/running/run_live_180_mse.txt
+# python ./src/fine_tune.py --mode ft\
+# --model_save ./model/ft/live_mse --data_log ./log/ft/live_190_mse.txt\
+# --train_loss mse --test_loss mse\
+# --lr 1e-6\
+# 2>&1 | tee ./log/ft/running/run_live_190_mse.txt
 
 # LIVE ft with mae
-# python ./src/fine_tune.py --mode ft --load_model ./model/scratch/cuda_True_epoch_550\
-#  --model_save ./model/ft/live_mae --data_log ./log/ft/live_180_mae.txt\
+# python ./src/fine_tune.py --mode ft\
+# --model_save ./model/ft/live_mae --data_log ./log/ft/live_190_mae.txt\
 # --lr 1e-6\
-# 2>&1 | tee ./log/ft/running/run_live_180_mae.txt
+# 2>&1 | tee ./log/ft/running/run_live_190_mae.txt
 
 # -----ft2-----
 
@@ -28,15 +28,15 @@
 # ------ft12----
 
 # LIVE ft12 with mse
-# python ./src/fine_tune.py --mode ft12 --load_model ./model/scratch/cuda_True_epoch_550\
-# --model_save ./model/ft12/live_mse1  --data_log ./log/ft12/live_180_mse1.txt\
-# --train_loss mse --test_loss mse\
-# 2>&1 | tee ./log/ft12/running/run_live_180_mse1.txt
+python ./src/fine_tune.py --mode ft12\
+ --model_save ./model/ft12/live_mse  --data_log ./log/ft12/live_190_mse.txt\
+ --train_loss mse --test_loss mse\
+ 2>&1 | tee ./log/ft12/running/run_live_190_mse.txt
 
 # LIVE ft12 with mae
-#python ./src/fine_tune.py --mode ft12 --load_model ./model/scratch/cuda_True_epoch_550\
-# --model_save ./model/ft12/live_mae1 --data_log ./log/ft12/live_180_mae1.txt\
-# 2>&1 | tee ./log/ft12/running/run_live_180_mae1.txt
+python ./src/fine_tune.py --mode ft12\
+ --model_save ./model/ft12/live_mae --data_log ./log/ft12/live_190_mae.txt\
+ 2>&1 | tee ./log/ft12/running/run_live_190_mae.txt
 
 # ----------
 
@@ -64,14 +64,16 @@
 # --train_loss mse --test_loss mse
 
 # TID2013 ft12 with mse
-# python ./src/fine_tune.py --mode ft12 --dataset tid2013 --load_model ./model/scratch/cuda_True_epoch_550\
-# --model_save ./model/ft12/tid2013_mse --data_log ./log/ft12/tid2013_180_mse.txt
-# --train_loss mse --test_loss mse
+python ./src/fine_tune.py --mode ft12 --dataset tid2013\
+ --model_save ./model/ft12/tid2013_mse --data_log ./log/ft12/tid2013_190_mse.txt\
+ --train_loss mse --test_loss mse\
+ 2>&1 | tee ./log/ft12/running/run_tid2013_190_mse.txt
 
 # TID2013 ft with mae
-# python ./src/fine_tune.py --mode ft --dataset tid2013 --load_model ./model/scratch/cuda_True_epoch_550\
-# --model_save ./model/ft/tid2013_mae --data_log ./log/ft/tid2013_180_mae.txt
+# python ./src/fine_tune.py --mode ft --dataset tid2013\
+#  --model_save ./model/ft/tid2013_mae --data_log ./log/ft/tid2013_190_mae.txt
 # --train_loss mae --test_loss mae
+# 2>&1 | tee ./log/ft/running/run_tid2013_190_mae.txt
 
 # TID2013 ft2 with mae
 # python ./src/fine_tune.py --mode ft2 --dataset tid2013 --load_model ./model/scratch/cuda_True_epoch_550\
@@ -79,9 +81,10 @@
 # --train_loss mae --test_loss mae
 
 # TID2013 ft12 with mae
-# python ./src/fine_tune.py --mode ft12 --dataset tid2013 --load_model ./model/scratch/cuda_True_epoch_550\
-# --model_save ./model/ft12/tid2013_mae --data_log ./log/ft12/tid2013_180_mae.txt
-# --train_loss mae --test_loss mae
+python ./src/fine_tune.py --mode ft12 --dataset tid2013\
+ --model_save ./model/ft12/tid2013_mae --data_log ./log/ft12/tid2013_190_mae.txt\
+ --train_loss mae --test_loss mae\
+ 2>&1 | tee ./log/ft12/running/run_tid2013_190_mae.txt
 
 
 # ----------
@@ -93,7 +96,7 @@
 # 2>&1 | tee ./log/scratch/running/run_face_180_mse.txt
 
 # train scratch with reload
-python ./src/main.py --epochs 500 --data_log ./log/scratch/face_180_mse.txt\
- --train_loss mse --test_loss mse\
- --reload_model ./model/scratch/face_mse_499_0.9665_0.9586 --reload_epoch 499\
- 2>&1 | tee ./log/scratch/running/run_face_180_mse_c.txt
+# python ./src/main.py --epochs 500 --data_log ./log/scratch/face_180_mse.txt\
+#  --train_loss mse --test_loss mse\
+#  --reload_model ./model/scratch/face_mse_499_0.9665_0.9586 --reload_epoch 499\
+#  2>&1 | tee ./log/scratch/running/run_face_180_mse_c.txt

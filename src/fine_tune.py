@@ -6,6 +6,7 @@ import argparse
 import torch.nn.functional as F
 import copy
 from torch.optim.lr_scheduler import StepLR
+import os
 
 
 '''
@@ -22,7 +23,7 @@ parser = argparse.ArgumentParser(description='fine-tune exist model on LIVE/TID2
 
 parser.add_argument('--dataset', type=str, default='live',
                     help='[live]live or tid2013 for fine-tuning')
-parser.add_argument('--load_model', type=str, default='./model/cuda_True_epoch_550',
+parser.add_argument('--load_model', type=str, default='./model/scratch/face_mse_863_0.9682_0.9598',
                     help='model path to fine-tune from')
 parser.add_argument('--epochs', type=int, default=500,
                     help='[200]total epochs of training')
@@ -30,7 +31,7 @@ parser.add_argument('--batch_size', type=int, default=32,
                     help='[32]batch_size')
 parser.add_argument('--num_workers', type=int, default=4,
                     help='[4]num_workers for iterating traning dataset')
-parser.add_argument('--lr', type=float, default=4e-6,
+parser.add_argument('--lr', type=float, default=1e-6,
                     help='[4e-6] learning rate')
 parser.add_argument('--optimizer', type=str, default='adam',
                     help='[adam] optimizer type')
@@ -64,19 +65,19 @@ train_loss = args.train_loss
 test_loss = args.test_loss
 data_log = args.data_log
 model_reload = args.model_reload
-epoch_reload = args.epoch_reload
 model_save = args.model_save
 model_epoch = args.model_epoch
 mode = args.mode
 num_patch = args.num_patch
 write_data = True if data_log != '' \
     else False
-reload = True if model_reload != '' and epoch_reload != 0 \
+reload = True if model_reload != '' \
     else False
 model_path = args.load_model if not reload \
     else args.model_reload
 save_model = True if model_save != '' \
     else False
+args.start_epoch = 0
 
 cuda = torch.cuda.is_available()
 device = torch.device("cuda:0" if cuda else "cpu")
@@ -89,21 +90,21 @@ else:
     live_train = './data/live_generator/ft_live_train.txt'
     live_test = './data/live_generator/ft_live_test.txt'
 
-# if model_path == '', train from scratch
+# if model_path == ''
 if model_path != '':
-    model = torch.load(model_path)
+    model = Net_deep()
     if mode == 'ft12':
         model = ft12(model)
     elif mode == 'ft2':
         model = ft2(model)
 else:
     model = Net_deep()
+    print(type(model))
     if mode == 'ft12':
         model = ft12(model)
     elif mode == 'ft2':
         model = ft2(model)
 
-model.to(device=device, dtype=dtype)
 if save_model:
     best_model = {'model': None,
                   'epoch': -1,
@@ -112,6 +113,8 @@ if save_model:
                   'srocc': 0.5,
                   'new': False}
 
+
+model.to(device=device, dtype=dtype)
 if mode == 'ft12':
     optimizer = torch.optim.Adam([
         {'params': model.features.parameters()},
@@ -128,6 +131,22 @@ else:
 
 # for one iter
 scheduler = StepLR(optimizer, step_size=100, gamma=0.7)
+
+if reload:
+    if os.path.isfile(model_reload):
+        print("=> loading checkpoint '{}'".format(model_reload))
+        checkpoint = torch.load(model_reload)
+        args.start_epoch = checkpoint['epoch']
+        best_model['lcc'] = checkpoint['lcc']
+        best_model['srocc'] = checkpoint['srocc']
+        model.load_state_dict(checkpoint['state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        print("=> loaded checkpoint '{}' (epoch {})"
+              .format(model_reload, checkpoint['epoch']))
+    else:
+        print("=> no checkpoint found at '{}'".format(model_reload))
+
+model.to(device=device, dtype=dtype)
 
 live_dataset = tools.get_live_dataset(live_train=live_train,
                                       live_test=live_test)
@@ -239,17 +258,27 @@ if write_data:
         f.write(str(model) + '\n')
 
 for i in range(epochs):
-    epoch = i + 1 + epoch_reload
+    epoch = i + 1 + args.start_epoch
     scheduler.step()
 
     test(epoch)
     train(epoch)
 
     if save_model and (i+1) % model_epoch == 0 and best_model['new'] == True:
-        path = model_save + '_{}_{:.4f}_{:.4f}'.format(
+        path = model_save + '_{}_{:.4f}_{:.4f}.pth.tar'.format(
             best_model['epoch'], best_model['lcc'], best_model['srocc'])
         tools.log_print('Saving model:{}'.format(path))
-        torch.save(best_model['model'].to(torch.device("cpu")),
-                   path)
+        # torch.save(best_model['model'].to(torch.device("cpu")),
+        #           path)
+
+        tools.save_checkpoint({
+            'epoch': best_model['epoch'],
+            'args': args,
+            'state_dict': best_model['model'].to(torch.device("cpu")).state_dict(),
+            'lcc': best_model['lcc'],
+            'srocc': best_model['srocc'],
+            'optimizer': optimizer.state_dict(),
+        }, filename=path)
+
         # close buffer
         best_model['new'] = False

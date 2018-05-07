@@ -1,0 +1,5 @@
+opencv-python
+scipy>=0.17.0
+scikit-image
+pytorch
+numpy

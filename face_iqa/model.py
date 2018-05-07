@@ -1,6 +1,5 @@
 import torch.nn as nn
 import math
-import torch.nn.functional as F
 import torch
 import numpy as np
 
@@ -150,21 +149,5 @@ def ft12(model):
     model.classifiers.add_module('dropout', nn.Dropout(p=0.5, inplace=True))
     model.classifiers.add_module('fc3', nn.Linear(512, 1))
     model.add_module('logistic', Logistic())
-
-    return model
-
-
-def ft2(model):
-    """
-    input Net_deep and output model
-    add classifiers with fc3 and logistic
-    only backward on classifiers
-    :param model:
-    :return:
-    """
-
-    model = ft12(model)
-    for param in model.features.parameters():
-        param.requires_grad = False
 
     return model
