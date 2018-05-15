@@ -10,7 +10,7 @@ import sys
 input_txt = '/data/junrui/github/transIQA/data/high_images.txt'
 input_dir = '/home/junrui/github/dataset/LS3D-W/AFLW2000-3D-Reannotated/'
 
-model_path = '/data/junrui/github/transIQA/model/ft12/live_mae_test_20_0.6461_0.6751.pth.tar'
+model_path = '/data/junrui/github/transIQA/model/ft12/tid2013_mse_423_0.8354_0.8103.pth.tar'
 fi = face_iqa.FaceIQA(enable_cuda=True, model_path=model_path)
 """
 input_list = []

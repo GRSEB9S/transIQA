@@ -92,14 +92,13 @@ else:
 
 # if model_path == ''
 if model_path != '':
-    model = Net_deep()
+    model = torch.load(model_path)
     if mode == 'ft12':
         model = ft12(model)
     elif mode == 'ft2':
         model = ft2(model)
 else:
     model = Net_deep()
-    print(type(model))
     if mode == 'ft12':
         model = ft12(model)
     elif mode == 'ft2':
