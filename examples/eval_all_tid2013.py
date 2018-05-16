@@ -5,9 +5,21 @@ import face_iqa
 from skimage import io
 
 
-model_path = '/data/junrui/github/transIQA/model/ft12/tid2013_mse_423_0.8354_0.8103.pth.tar'
-fi = face_iqa.FaceIQA(enable_cuda=True, model_path=model_path)
-tp = 'FT_all'
+mode = 'ft2'
+
+if mode == 'ft12':
+    model_path = '/data/junrui/github/transIQA/model/ft12/tid2013_mse_423_0.8354_0.8103.pth.tar'
+elif mode == 'ft2':
+    model_path = '/data/junrui/github/transIQA/model/ft2/tid2013_mse_361_0.6255_0.5661.pth.tar'
+elif mode == 'ft':
+    model_path = '/data/junrui/github/transIQA/model/ft/tid2013_mse_376_0.8121_0.7777.pth.tar'
+else:
+    print('error mode')
+    exit(0)
+
+tp = mode + '_all'
+
+fi = face_iqa.FaceIQA(enable_cuda=True, model_path=model_path, mode=mode)
 
 res_dir = './log/results/tid2013/'
 

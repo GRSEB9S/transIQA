@@ -4,10 +4,21 @@ import face_iqa
 from skimage import io
 import os
 
-tp = 'FT_each'
+mode = 'ft'
 
-model_path = '/data/junrui/github/transIQA/model/ft12/live_mse_405_0.9725_0.9674.pth.tar'
-fi = face_iqa.FaceIQA(enable_cuda=True, model_path=model_path)
+if mode == 'ft12':
+    model_path = '/data/junrui/github/transIQA/model/ft12/live_mse_405_0.9725_0.9674.pth.tar'
+elif mode == 'ft2':
+    model_path = '/data/junrui/github/transIQA/model/ft2/live_mae_398_0.9104_0.9255.pth.tar'
+elif mode == 'ft':
+    model_path = '/data/junrui/github/transIQA/model/ft/live_mae_283_0.9776_0.9692.pth.tar'
+else:
+    print('error mode')
+    exit(0)
+
+tp = mode + '_each'
+
+fi = face_iqa.FaceIQA(enable_cuda=True, model_path=model_path, mode=mode)
 
 res_dir = './log/results/live/'
 

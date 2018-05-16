@@ -15,6 +15,7 @@ class FaceIQA:
 
     def __init__(self, enable_cuda=True,
                  model_path='/data/junrui/github/transIQA/model/ft12/live_mse_test_20_0.6461_0.6751.pth.tar',
+                 mode = 'ft12'
                  ):
         self.enable_cuda = enable_cuda
         self.model_path = model_path
@@ -32,7 +33,10 @@ class FaceIQA:
             ))
             exit(0)
 
-        self.face_iqa_net = ft12(Net_deep())
+        if mode == 'ft':
+            self.face_iqa_net = Net_deep()
+        else:
+            self.face_iqa_net = ft12(Net_deep())
         checkpoint = torch.load(model_path)
         self.face_iqa_net.load_state_dict(checkpoint['state_dict'])
         self.face_iqa_net.to(self.device)

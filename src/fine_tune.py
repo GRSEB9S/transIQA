@@ -25,13 +25,13 @@ parser.add_argument('--dataset', type=str, default='live',
                     help='[live]live or tid2013 for fine-tuning')
 parser.add_argument('--load_model', type=str, default='./model/scratch/face_mse_863_0.9682_0.9598',
                     help='model path to fine-tune from')
-parser.add_argument('--epochs', type=int, default=500,
+parser.add_argument('--epochs', type=int, default=400,
                     help='[200]total epochs of training')
 parser.add_argument('--batch_size', type=int, default=32,
                     help='[32]batch_size')
 parser.add_argument('--num_workers', type=int, default=4,
                     help='[4]num_workers for iterating traning dataset')
-parser.add_argument('--lr', type=float, default=1e-6,
+parser.add_argument('--lr', type=float, default=1.5e-6,
                     help='[4e-6] learning rate')
 parser.add_argument('--optimizer', type=str, default='adam',
                     help='[adam] optimizer type')

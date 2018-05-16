@@ -1,0 +1,5 @@
+gblur:  0.985
+wn:  0.993
+jpeg:  0.984
+jp2k:  0.956
+fastfading:  0.957
