@@ -5,7 +5,7 @@ import face_iqa
 from skimage import io
 
 
-mode = 'ft'
+mode = 'ft2'
 
 if mode == 'ft12':
     model_path = '/data/junrui/github/transIQA/model/ft12/live_mse_405_0.9725_0.9674.pth.tar'

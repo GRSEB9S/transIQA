@@ -12,7 +12,6 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as readme_file:
 requirements = [
     'torch',
     'numpy',
-    'scipy>=0.17.0',
     'opencv-python',
     'enum34;python_version<"3.4"'
 ]

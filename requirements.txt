@@ -1,5 +1,4 @@
-opencv-python
-scipy>=0.17.0
-scikit-image
-pytorch
 numpy
+opencv-python
+torch>=0.4.0
+matplotlib

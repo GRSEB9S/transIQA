@@ -7,19 +7,22 @@ from .utils import *
 
 
 class FaceIQA:
-    """Initialize the face iqa pipline
+    """Initialize the face iqa pipeline
 
     Args:
 
     """
 
     def __init__(self, enable_cuda=True,
+                 enable_cudnn=False,
                  model_path='/data/junrui/github/transIQA/model/ft12/live_mse_test_20_0.6461_0.6751.pth.tar',
-                 mode = 'ft12'
-                 ):
+                 mode='ft12'):
         self.enable_cuda = enable_cuda
         self.model_path = model_path
         self.dtype = torch.float
+
+        if enable_cudnn:
+            torch.backends.cudnn.benchmark = True
 
         if self.enable_cuda and torch.cuda.is_available():
             self.device = torch.device("cuda")

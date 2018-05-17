@@ -1,26 +1,16 @@
 # test speed with lower api
 
 import face_iqa
-from skimage import io
 import time
 import glob
 import os
 import sys
+import cv2
 
-input_txt = '/data/junrui/github/transIQA/data/high_images.txt'
 input_dir = '/home/junrui/github/dataset/LS3D-W/AFLW2000-3D-Reannotated/'
 
 model_path = '/data/junrui/github/transIQA/model/ft12/tid2013_mse_423_0.8354_0.8103.pth.tar'
 fi = face_iqa.FaceIQA(enable_cuda=True, model_path=model_path)
-"""
-input_list = []
-print('Reading list')
-with open(input_txt) as f:
-    for path in f:
-        image = io.imread(path.split()[0])
-        input_list.append(image)
-"""
-
 
 types = ('*.jpg', '*.png')
 images_list = []
@@ -28,7 +18,7 @@ for files in types:
     images_list.extend(glob.glob(os.path.join(input_dir, files)))
 images = []
 for i in images_list:
-    images.append(io.imread(i))
+    images.append(cv2.cvtColor(cv2.imread(i), cv2.COLOR_BGR2RGB))
 
 print('Starting processing')
 start = time.time()
